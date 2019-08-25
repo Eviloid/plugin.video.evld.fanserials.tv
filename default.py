@@ -111,7 +111,7 @@ def show_serials(params):
         html = get_html('%s/%s/' % (BASE_URL, u))
         desc = get_description(u, ids[i])
 
-        add_item(title, params={'mode':'seasons', 'u':u, 'i':id}, poster=img, fanart=fanart, plot=desc, isFolder=True)
+        add_item(title, params={'mode':'seasons', 'u':u, 'i':ids[i]}, poster=img, fanart=fanart, plot=desc, isFolder=True)
 
     xbmcplugin.setContent(handle, 'tvshows')
     xbmcplugin.endOfDirectory(handle)
