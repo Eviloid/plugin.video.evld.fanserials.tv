@@ -125,8 +125,11 @@ def show_seasons(params):
     container = common.parseDOM(html, 'div', attrs={'itemprop':'containsSeason'})
     seasons = common.parseDOM(container, 'li')
 
-    img = IMG_URL_PATTERN % (params['i'], params['u'])
-    fanart = ART_URL_PATTERN % (params['i'], params['u'])
+    id = params['i'][-4:-20:-1][::-1]
+    id = id if id else '0'
+
+    img = IMG_URL_PATTERN % (id, params['u'])
+    fanart = ART_URL_PATTERN % (id, params['u'])
     plot = get_description(params['u'], params['i'])
 
     if len(seasons) > 0:
