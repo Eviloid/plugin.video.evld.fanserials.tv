@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<settings>
+    <category label="Основные">
+        <setting id="host" label="Хост" type="text" default="fanserials.tv" visible="true"/>
+        <setting type="sep"/>
+        <setting label="Очистить кэш картинок" type="action" action="RunPlugin(plugin://$ID?mode=cleancache)" option="close"/>
+    </category>
+    <category label="moonwalk.cc">
+        <setting id="key" label="Key" type="text" default="9186a0bae4afec34c323aecb7754b7c848e016188eb8b5be677d54d3e70f9cbd" visible="true"/>
+        <setting id="iv" label="iv" type="text" default="2ea2116c80fae4e90c1e2b2b765fcc45" visible="true"/>
+        <setting type="sep"/>
+        <setting label="Обновить ключи" type="action" action="RunPlugin(plugin://$ID?mode=updatekeys)"/>
+    </category>
+</settings>
