@@ -215,9 +215,9 @@ def play_episode(params):
 
     else:
         html = get_html(src)
-        s = re.search(r'"hls":"(.*?)\.m3u8', html)
+        s = re.search(r'"hls":"(.*?\.m3u8)', html)
         if s:
-            purl = s.group(1).replace(r'\/', '/') + '.m3u8'
+            purl = s.group(1).replace(r'\/', '/')
 
     if purl:
         item = xbmcgui.ListItem(path=purl)
@@ -252,7 +252,7 @@ def add_item(title, params={}, icon='', banner='', fanart='', poster='', thumb='
     if url == None: url = '%s?%s' % (sys.argv[0], urllib.urlencode(params))
 
     item = xbmcgui.ListItem(title, iconImage = icon, thumbnailImage = thumb)
-    item.setInfo(type='video', infoLabels={'title': title, 'plot': plot})
+    item.setInfo(type='video', infoLabels={'title': title, 'plot': plot, 'mediatype':'video'})
 
     if isPlayable:
         item.setProperty('isPlayable', 'true')
