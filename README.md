@@ -1,2 +1,2 @@
 # FanSerials video addon
-Дополнение Kodi для просмотра сериалов с сайта FanSerials.tv
+Дополнение Kodi для просмотра сериалов с сайта [FanSerials.tv](http://fanserials.tv)

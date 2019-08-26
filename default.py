@@ -108,7 +108,6 @@ def show_serials(params):
         img = IMG_URL_PATTERN % (id, u)
         fanart = ART_URL_PATTERN % (id, u)
 
-        html = get_html('%s/%s/' % (BASE_URL, u))
         desc = get_description(u, ids[i])
 
         add_item(title, params={'mode':'seasons', 'u':u, 'i':ids[i]}, poster=img, fanart=fanart, plot=desc, isFolder=True)
