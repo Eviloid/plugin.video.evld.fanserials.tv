@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # Eviloid, 22.08.2019
 
-import os, urllib, sys, urllib2, re, cookielib
+import os, urllib, sys, urllib2, re, cookielib, json
 import xbmc, xbmcgui, xbmcplugin, xbmcaddon
 import CommonFunctions
 
@@ -29,7 +29,12 @@ IMG_URL_PATTERN = 'http://fanimg.site/serials/%s/v2/%s.jpg'
 ART_URL_PATTERN = 'http://fanimg.site/serials/%s/h2/%s.jpg'
 
 def main_menu():
-    add_item('[B]Все сериалы[/B]', params={'mode':'abc'}, fanart=fanart, isFolder=True)
+    add_item('[B]Сериалы[/B]', params={'mode':'abc', 't':'0'}, fanart=fanart, isFolder=True)
+    add_item('[B]Аниме[/B]', params={'mode':'abc', 't':'2'}, fanart=fanart, isFolder=True)
+    add_item('[B]Мультсериалы[/B]', params={'mode':'abc', 't':'1'}, fanart=fanart, isFolder=True)
+    add_item('[B]Дорамы[/B]', params={'mode':'abc', 't':'5'}, fanart=fanart, isFolder=True)
+    add_item('[B]Документальное[/B]', params={'mode':'abc', 't':'3'}, fanart=fanart, isFolder=True)
+    add_item('[B]ТВ-шоу[/B]', params={'mode':'abc', 't':'6'}, fanart=fanart, isFolder=True)
 
     # новинки
     html = get_html(BASE_URL + '/new/')
@@ -55,7 +60,7 @@ def main_menu():
 
             add_item(title, params={'mode':'episode', 'u':u}, plot=plot, thumb=img, fanart=fanart, isPlayable=True)    
 
-    xbmcplugin.setContent(handle, 'episodes')
+    xbmcplugin.setContent(handle, 'videos')
     xbmcplugin.endOfDirectory(handle)
 
 
@@ -75,8 +80,10 @@ def get_description(url, id):
     return plot
 
 
-def ABClist():
-    html = get_html(BASE_URL)
+def ABClist(params):
+    t = params.get('t', '0')
+
+    html = json.loads(get_html('%s/alphabet/%s/' % (BASE_URL, t)))['alphabet']
 
     alphabet = common.parseDOM(html, 'ul', attrs={'id':'letters-list'})
     abc = common.parseDOM(alphabet, 'a')
@@ -84,14 +91,16 @@ def ABClist():
 
     for i, letter in enumerate(abc):
         title = letter
-        add_item(title, params={'mode':'serials', 'letter':hrefs[i][1:]}, fanart=fanart, isFolder=True)
+        add_item(title, params={'mode':'serials', 't':t, 'letter':hrefs[i][1:]}, fanart=fanart, isFolder=True)
 
     xbmcplugin.setContent(handle, 'videos')
     xbmcplugin.endOfDirectory(handle)
 
 
 def show_serials(params):
-    html = get_html(BASE_URL)
+    t = params.get('t', '0')
+
+    html = json.loads(get_html('%s/alphabet/%s/' % (BASE_URL, t)))['alphabet']
 
     alphabet = common.parseDOM(html, 'div', attrs={'class':'literal', 'id':urllib.unquote_plus(params['letter'])})
     serials = common.parseDOM(alphabet, 'li', attrs={'class':'literal__item not-loaded'})
@@ -217,10 +226,12 @@ def play_episode(params):
         html = get_html(src)
         s = re.search(r'"hls":"(.*?\.m3u8)', html)
         if s:
-            purl = s.group(1).replace(r'\/', '/')
+            purl = s.group(1).replace(r'\/', '/').replace(r'\r', '').replace(r'\n', '')
 
     if purl:
         item = xbmcgui.ListItem(path=purl)
+        item.setProperty('inputstreamaddon', 'inputstream.adaptive')
+        item.setProperty('inputstream.adaptive.manifest_type', 'hls')
         xbmcplugin.setResolvedUrl(handle, True, item)
 
 
@@ -309,7 +320,7 @@ if mode == '':
     main_menu()
 
 if mode == 'abc':
-    ABClist()
+    ABClist(params)
 
 if mode == 'serials':
     show_serials(params)
