@@ -327,4 +327,12 @@ if mode == 'cleancache':
     from tccleaner import TextureCacheCleaner as tcc
     tcc().remove_like('%fanimg.site/serials/%', True)
 
+if mode == 'updatekeys':
+    res = common.fetchPage({'link':'https://raw.githubusercontent.com/WendyH/PHP-Scripts/master/moon4crack.ini'})
+    if res['content']:
+        data = {k.strip(): v.strip().strip('"') for i in [l for l in res['content'].splitlines() if l.strip() != ''] for k, v in [i.split('=')]}
+        addon.setSetting('key', data['key'])
+        addon.setSetting('iv', data['iv'])
+        xbmcgui.Dialog().notification(PLUGIN_NAME, 'Ключи обновлены', icon, 2000, False)
+
 connect.close()
