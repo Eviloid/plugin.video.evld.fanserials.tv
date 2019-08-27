@@ -252,10 +252,11 @@ def add_item(title, params={}, icon='', banner='', fanart='', poster='', thumb='
     if url == None: url = '%s?%s' % (sys.argv[0], urllib.urlencode(params))
 
     item = xbmcgui.ListItem(title, iconImage = icon, thumbnailImage = thumb)
-    item.setInfo(type='video', infoLabels={'title': title, 'plot': plot, 'mediatype':'video'})
+    item.setInfo(type='video', infoLabels={'title': title, 'plot': plot})
 
     if isPlayable:
         item.setProperty('isPlayable', 'true')
+        item.setProperty('mediatype', 'video')
     
     if banner != '':
         item.setArt({'banner': banner})
