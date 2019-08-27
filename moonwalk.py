@@ -23,18 +23,14 @@ def encrypt(data, keyhex, ivhex):
 
     return ''
 
-
-def get_episodes(main_frame_url, referer, season):
+def get_data(frame_url, referer):
     headers = {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
                 'Referer': referer,
                 'User-Agent': USER_AGENT}
-
-    params={}
-
-    episodes = []
+    data = []
 
     html = ''
-    conn = urllib2.urlopen(urllib2.Request('%s?%s' % (main_frame_url, urllib.urlencode(params)), headers=headers))
+    conn = urllib2.urlopen(urllib2.Request(frame_url, headers=headers))
     html = conn.read()
     conn.close()
 
@@ -47,39 +43,24 @@ def get_episodes(main_frame_url, referer, season):
 
         data = json.loads(a)
 
-        episodes = data['episodes']
+    return data
+
+def get_episodes(frame_url, referer, season):
+
+    data = get_data(frame_url, referer)
+
+    episodes = data.get('episodes', [])
 
     return episodes
 
-
-def get_url(main_frame_url, referer, key='', iv=''):
+def get_url(frame_url, referer, key='', iv=''):
     headers = {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
                 'Referer': referer,
                 'User-Agent': USER_AGENT}
 
-    params={}
+    data = get_data(frame_url, referer)
 
-    html = ''
-    conn = urllib2.urlopen(urllib2.Request('%s?%s' % (main_frame_url, urllib.urlencode(params)), headers=headers))
-    html = conn.read()
-    conn.close()
-
-    s = re.search(r'var video_balancer_options = ({.*?});', html, re.I and re.S)
-    if s:
-        a = s.group(1).replace(r"'", r'"')
-        a = re.sub(r'([^\w\"\.])(\w+)\s*:', r'\1"\2":', a)
-        a = re.sub(r'("\w+")\s*:\s*([\w\.]+)', r'\1:"\2"', a)
-        a = re.sub(r'(,\s*)(})', r'\2', a)
-
-        data = json.loads(a)
-
-        iframe_url = urllib.unquote_plus(data['ref_url'])
-
-        html = ''
-        conn = urllib2.urlopen(urllib2.Request('%s?%s' % (iframe_url, urllib.urlencode(params)), headers=headers))
-        html = conn.read()
-        conn.close()
-
+    if len(data) > 0:
         payload = '{"a":%s,"b":%s,"c":false,"d":"moonwalk","e":"%s","f":"%s"}' % (data['partner_id'], data['domain_id'], data['video_token'], USER_AGENT)
 
         crypted = encrypt(payload, key, iv) 
