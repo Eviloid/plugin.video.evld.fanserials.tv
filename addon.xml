@@ -14,5 +14,9 @@
         <summary>FanSerials</summary>
         <description>FanSerials.tv - лучшие сериалы</description>
         <language>ru</language>
+        <website>http://fanserials.tv</website>
+        <language>ru</language>
+        <source>https://github.com/Eviloid/plugin.video.evld.fanserials.tv</source>
+        <news>[B]1.2.3[/B] - Первый публичный релиз</news>
     </extension>
 </addon>
