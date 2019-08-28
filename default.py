@@ -168,15 +168,17 @@ def show_seasons(params):
 
 
 def show_season(params):
-    url = '%s/%s/' % (BASE_URL, params['u'])
 
-    html = get_html(url)
+    page = int(params.get('page', 1))
+
+    url = '%s/%s/page/%s/' % (BASE_URL, params['u'], page) if page > 1 else '%s/%s/' % (BASE_URL, params['u'])
+    html = get_html(url, {'order':'asc'})
 
     container = common.parseDOM(html, 'ul', attrs={'id':'episode_list'})
     episodes = common.parseDOM(container, 'div', attrs={'class':'item-serial'})
 
     if len(episodes) > 0:
-        for episode in reversed(episodes):
+        for episode in episodes:
 
             img = common.parseDOM(episode, 'div', attrs={'class':'field-img'}, ret='style')[0]
             img = img[23:-3]
@@ -187,6 +189,13 @@ def show_season(params):
             u = common.parseDOM(episode, 'a', ret='href')[0]
 
             add_item(title, params={'mode':'episode', 'u':u}, thumb=img, fanart=fanart, isPlayable=True)
+
+        # pagination
+        p = common.parseDOM(html, 'span', attrs={'class':'icon-chevron-thin-right'})
+        if len(p) > 0:
+            params['page'] = page + 1
+            add_item('Далее > %d' % params['page'], params=params, fanart=fanart, isFolder=True)
+
     else:
         # пробуем moonwalk
         iframes = common.parseDOM(html, 'iframe', attrs={'id':'iframe-player'}, ret='src')
