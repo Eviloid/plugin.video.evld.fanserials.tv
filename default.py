@@ -54,7 +54,8 @@ def main_menu():
 
             desc = common.parseDOM(episode, 'div', attrs={'class':'field-title'})[0]
             desc = common.parseDOM(desc, 'a')[0]
-            title = '%s [COLOR=cyan][%s][/COLOR]' % (common.replaceHTMLCodes(desc), plot)
+#            title = '%s [COLOR=cyan][%s][/COLOR]' % (common.replaceHTMLCodes(desc), plot)
+            title = '[COLOR=yellow]%s[/COLOR] [COLOR=gray]%s[/COLOR]' % (common.replaceHTMLCodes(desc), plot)
 
             u = common.parseDOM(episode, 'a', ret='href')[0]
 
