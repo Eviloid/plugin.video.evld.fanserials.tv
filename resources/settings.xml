@@ -2,6 +2,7 @@
 <settings>
     <category label="Основные">
         <setting id="host" label="Хост" type="text" default="fanserials.tv" visible="true"/>
+        <setting id="sound" label="Озвучка" type="enum" default="0" values="По-умолчанию|Выбор" visible="true"/>
         <setting type="sep"/>
         <setting label="Очистить кэш картинок" type="action" action="RunPlugin(plugin://$ID?mode=cleancache)" option="close"/>
     </category>
