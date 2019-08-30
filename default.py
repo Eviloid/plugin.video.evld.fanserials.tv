@@ -148,16 +148,15 @@ def show_seasons(params):
 
             add_item(title, params={'mode':'season', 'u':u}, plot=plot, poster=img, fanart=fanart, isFolder=True)
     else:
-        container = common.parseDOM(html, 'div', attrs={'class':'seasons-wrapper'})
-        if len(container) > 0:
-            params['s'] = 1
-
-            seasons = common.parseDOM(container, 'div', attrs={'class':'season-item'}, ret='data-season')
-            if len(seasons) > 0:
-                add_item('Сезон 1', params={'mode':'season', 'u':params['u'], 's':1}, plot=plot, poster=img, fanart=fanart, isFolder=True)
-                for season in seasons:
-                    title = 'Сезон ' + season.encode('utf8')
-                    add_item(title, params={'mode':'season', 'u':params['u'], 's':season.encode('utf8')}, plot=plot, poster=img, fanart=fanart, isFolder=True)
+        # moonwalk
+        # !!TODO!! для moonwalk тут надо делать выбор озвучки, до выбора сезона!
+        data = re.search(r"window\.playerData = '(\[.*\])';<", html, re.I and re.S)
+        if data:
+            data = json.loads(data.group(1))
+            seasons = sorted(data[0]['seasons'])
+            for season in seasons:
+                title = 'Сезон ' + str(season)
+                add_item(title, params={'mode':'season', 'u':params['u'], 's':season}, plot=plot, poster=img, fanart=fanart, isFolder=True)
     
     if len(seasons) == 0:
         show_season(params)
@@ -198,14 +197,13 @@ def show_season(params):
 
     else:
         # пробуем moonwalk
-        iframes = common.parseDOM(html, 'iframe', attrs={'id':'iframe-player'}, ret='src')
-        if len(iframes) > 0:
-            iframe = re.search(r"(.*)\?", iframes[0])
-            if iframe:
-                episodes = moon.get_episodes(iframe.group(1), url, params['s'])
-                for episode in episodes:
-                    title = 'Серия ' + str(episode)
-                    add_item(title, params={'mode':'episode', 'u':'/%s/' % params['u'], 's':params['s'], 'e':episode}, icon=icon, fanart=fanart, isPlayable=True)
+        data = re.search(r"window\.playerData = '(\[.*\])';<", html, re.I and re.S)
+        if data:
+            data = json.loads(data.group(1))
+            episodes = sorted(data[0]['seasons'][params['s']]['episodes'])
+            for episode in episodes:
+                title = 'Серия ' + str(episode)
+                add_item(title, params={'mode':'episode', 'u':'/%s/' % params['u'], 's':params['s'], 'e':episode}, icon=icon, fanart=fanart, isPlayable=True)
 
     xbmcplugin.setContent(handle, 'episodes')
     xbmcplugin.endOfDirectory(handle)

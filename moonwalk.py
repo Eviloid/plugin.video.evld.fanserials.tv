@@ -23,6 +23,7 @@ def encrypt(data, keyhex, ivhex):
 
     return ''
 
+
 def get_data(frame_url, referer):
     headers = {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
                 'Referer': referer,
@@ -45,13 +46,6 @@ def get_data(frame_url, referer):
 
     return data
 
-def get_episodes(frame_url, referer, season):
-
-    data = get_data(frame_url, referer)
-
-    episodes = data.get('episodes', [])
-
-    return episodes
 
 def get_url(frame_url, referer, key='', iv=''):
     headers = {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
