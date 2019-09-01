@@ -272,7 +272,6 @@ def play_episode(params):
                 purl = data['m3u8']
 
         elif 'vio.to' in iframe:
-
             html = get_html(iframe)
             s = re.search(r"link:.?'(.*?)'", html)
             if s:
@@ -282,8 +281,14 @@ def play_episode(params):
                     item = xbmcgui.ListItem(path='https:' + s[-1] + '|referer=https://vio.to/')
                     xbmcplugin.setResolvedUrl(handle, True, item)
 
-        else:
+        elif 'stormo.tv' in iframe:
+            html = get_html(iframe)
+            s = re.search(r'file:"(\[.*?\](.*?)\/[,\"\n\r]+){1,}', html)
+            if s:
+                item = xbmcgui.ListItem(path=s.group(2))
+                xbmcplugin.setResolvedUrl(handle, True, item)
 
+        else:
             html = get_html(iframe)
             s = re.search(r'"hls":"(.*?\.m3u8)', html)
             if s:
