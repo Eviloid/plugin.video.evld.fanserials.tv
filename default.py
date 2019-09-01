@@ -276,11 +276,11 @@ def play_episode(params):
             html = get_html(iframe)
             s = re.search(r"link:.?'(.*?)'", html)
             if s:
-		html = get_html(s.group(1))
-		s = re.findall(r"{url:.?'(.*?)'", html, re.I and re.S)
-        if s:
-            item = xbmcgui.ListItem(path='https:' + s[-1] + '|referer=https://vio.to/')
-            xbmcplugin.setResolvedUrl(handle, True, item)
+                html = get_html(s.group(1))
+                s = re.findall(r"{url:.?'(.*?)'", html, re.I and re.S)
+                if s:
+                    item = xbmcgui.ListItem(path='https:' + s[-1] + '|referer=https://vio.to/')
+                    xbmcplugin.setResolvedUrl(handle, True, item)
 
         else:
 
