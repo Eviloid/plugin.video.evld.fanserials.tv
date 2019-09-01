@@ -152,8 +152,6 @@ def show_seasons(params):
             add_item(title, params={'mode':'season', 'u':u}, plot=plot, poster=img, fanart=fanart, isFolder=True)
     else:
         # moonwalk
-        # !!TODO!! для moonwalk тут надо делать выбор озвучки, до выбора сезона!
-
         data = re.search(r"window\.playerData = '(\[.*\])';<", html, re.I and re.S)
         if data:
             o = 0 if sound_mode == 0 else int(params.get('o', -1))
