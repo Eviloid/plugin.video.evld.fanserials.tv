@@ -72,6 +72,6 @@ def get_url(frame_url, referer, key='', iv=''):
 
         if 'm3u8' in html:
             data = json.loads(html)
-            return data['m3u8']
+            return data
 
-    return ''
+    return []

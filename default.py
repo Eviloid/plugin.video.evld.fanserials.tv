@@ -28,6 +28,8 @@ BASE_URL = 'http://' + addon.getSetting('host')
 IMG_URL_PATTERN = 'http://fanimg.site/serials/%s/v2/%s.jpg'
 ART_URL_PATTERN = 'http://fanimg.site/serials/%s/h2/%s.jpg'
 
+sound_mode = int(addon.getSetting('sound'))
+
 def main_menu():
     add_item('[B]Сериалы[/B]', params={'mode':'abc', 't':'0'}, fanart=fanart, isFolder=True)
     add_item('[B]Аниме[/B]', params={'mode':'abc', 't':'2'}, fanart=fanart, isFolder=True)
@@ -58,7 +60,8 @@ def main_menu():
 
             u = common.parseDOM(episode, 'a', ret='href')[0]
 
-            add_item(title, params={'mode':'episode', 'u':u}, plot=plot, thumb=img, fanart=fanart, isPlayable=True)    
+            add_item(title, params={'mode':'episode', 'u':u}, plot=plot, thumb=img, fanart=fanart, isFolder=sound_mode==1, isPlayable=sound_mode==0)
+
 
     xbmcplugin.setContent(handle, 'videos')
     xbmcplugin.endOfDirectory(handle)
@@ -130,15 +133,15 @@ def show_seasons(params):
 
     html = get_html(url)
 
-    container = common.parseDOM(html, 'div', attrs={'itemprop':'containsSeason'})
-    seasons = common.parseDOM(container, 'li')
-
     id = params['i'][-4:-20:-1][::-1]
     id = id if id else '0'
 
     img = IMG_URL_PATTERN % (id, params['u'])
     fanart = ART_URL_PATTERN % (id, params['u'])
     plot = get_description(params['u'], params['i'])
+
+    container = common.parseDOM(html, 'div', attrs={'itemprop':'containsSeason'})
+    seasons = common.parseDOM(container, 'li')
 
     if len(seasons) > 0:
         for season in seasons:
@@ -150,13 +153,19 @@ def show_seasons(params):
     else:
         # moonwalk
         # !!TODO!! для moonwalk тут надо делать выбор озвучки, до выбора сезона!
+
         data = re.search(r"window\.playerData = '(\[.*\])';<", html, re.I and re.S)
         if data:
+            o = 0 if sound_mode == 0 else int(params.get('o', -1))
+            if o == -1:
+                show_sounds(url, params)
+                return
+
             data = json.loads(data.group(1))
-            seasons = sorted(data[0]['seasons'])
+            seasons = sorted(data[o]['seasons'])
             for season in seasons:
                 title = 'Сезон ' + str(season)
-                add_item(title, params={'mode':'season', 'u':params['u'], 's':season}, plot=plot, poster=img, fanart=fanart, isFolder=True)
+                add_item(title, params={'mode':'season', 'u':params['u'], 's':season, 'o':o}, plot=plot, poster=img, fanart=fanart, isFolder=True)
     
     if len(seasons) == 0:
         show_season(params)
@@ -164,6 +173,23 @@ def show_seasons(params):
 
     xbmcplugin.setContent(handle, 'seasons')
     xbmcplugin.endOfDirectory(handle)
+
+
+def show_sounds(url, params):
+
+    html = get_html(url)
+
+    playable = '.html' in url
+
+    data = re.search(r"window\.playerData = '(\[.*\])';<", html, re.I and re.S)
+    if data:
+        data = json.loads(data.group(1))
+        for i, player in enumerate(data):
+            params['o'] = i
+            add_item(player['name'], params, icon=icon, fanart=fanart, isPlayable=playable, isFolder= not playable)
+
+        xbmcplugin.setContent(handle, 'videos')
+        xbmcplugin.endOfDirectory(handle)
 
 
 def show_season(params):
@@ -187,7 +213,7 @@ def show_season(params):
             title = common.replaceHTMLCodes(desc)
             u = common.parseDOM(episode, 'a', ret='href')[0]
 
-            add_item(title, params={'mode':'episode', 'u':u}, thumb=img, fanart=fanart, isPlayable=True)
+            add_item(title, params={'mode':'episode', 'u':u}, thumb=img, fanart=fanart, isFolder=sound_mode==1, isPlayable=sound_mode==0)
 
         # pagination
         p = common.parseDOM(html, 'span', attrs={'class':'icon-chevron-thin-right'})
@@ -196,50 +222,87 @@ def show_season(params):
             add_item('Далее > %d' % params['page'], params=params, fanart=fanart, isFolder=True)
 
     else:
-        # пробуем moonwalk
+        # moonwalk
         data = re.search(r"window\.playerData = '(\[.*\])';<", html, re.I and re.S)
         if data:
+            o = int(params.get('o', 0))
             data = json.loads(data.group(1))
-            episodes = sorted(data[0]['seasons'][params['s']]['episodes'])
+            episodes = sorted(data[o]['seasons'][params['s']]['episodes'])
             for episode in episodes:
                 title = 'Серия ' + str(episode)
-                add_item(title, params={'mode':'episode', 'u':'/%s/' % params['u'], 's':params['s'], 'e':episode}, icon=icon, fanart=fanart, isPlayable=True)
+                add_item(title, params={'mode':'episode', 'u':'/%s/' % params['u'], 's':params['s'], 'e':episode, 'o':o}, icon=icon, fanart=fanart, isPlayable=True)
 
     xbmcplugin.setContent(handle, 'episodes')
     xbmcplugin.endOfDirectory(handle)
 
 
 def play_episode(params):
+
     url = BASE_URL + params['u']
+
+    o = 0 if sound_mode == 0 else int(params.get('o', -1))
+
+    if o == -1:
+        show_sounds(url, params)
+        return
 
     html = get_html(url)
 
-    src = common.parseDOM(html, 'iframe', attrs={'id':'iframe-player'}, ret='src')[0]
-
     purl = ''
+    surl = ''
 
-    if 'moonwalk' in src:
-        if 'e' in params.keys():
-            iframe = re.search(r"(.*)\?", src)
-            if iframe:
-                src = '%s?season=%s&episode=%s&nocontrols=1' % (iframe.group(1), params['s'], params['e'])
+    data = re.search(r"window\.playerData = '(\[.*\])';<", html, re.I and re.S)
+    if data:
+        data = json.loads(data.group(1))
+        iframe = data[o]['player']
 
-        key = addon.getSetting('key')
-        iv = addon.getSetting('iv')
+        if 'moonwalk' in iframe:
+            if 'e' in params.keys():
+                iframe = re.search(r"(.*)\?", iframe)
+                if iframe:
+                    src = '%s?season=%s&episode=%s&nocontrols=1' % (iframe.group(1), params['s'], params['e'])
+            else:
+                src = iframe
 
-        purl = moon.get_url(src, url, key, iv)
+            key = addon.getSetting('key')
+            iv = addon.getSetting('iv')
 
-    else:
-        html = get_html(src)
-        s = re.search(r'"hls":"(.*?\.m3u8)', html)
-        if s:
-            purl = s.group(1).replace(r'\/', '/').replace(r'\r', '').replace(r'\n', '')
+            data = moon.get_url(src, url, key, iv)
+            if 'subtitles' in data.keys():
+                surl = data['subtitles']['master_vtt'] if data['subtitles'] else ''
+            if 'm3u8' in data.keys():
+                purl = data['m3u8']
 
-    if purl:
-        item = xbmcgui.ListItem(path=purl)
-        item.setProperty('inputstreamaddon', 'inputstream.adaptive')
-        item.setProperty('inputstream.adaptive.manifest_type', 'hls')
-        xbmcplugin.setResolvedUrl(handle, True, item)
+        elif 'vio.to' in iframe:
+
+            html = get_html(iframe)
+            s = re.search(r"link:.?'(.*?)'", html)
+            if s:
+		html = get_html(s.group(1))
+		s = re.findall(r"{url:.?'(.*?)'", html, re.I and re.S)
+            	if s:
+	            item = xbmcgui.ListItem(path='https:' + s[-1] + '|referer=https://vio.to/')
+        	    xbmcplugin.setResolvedUrl(handle, True, item)
+
+        else:
+
+            html = get_html(iframe)
+            s = re.search(r'"hls":"(.*?\.m3u8)', html)
+            if s:
+                purl = s.group(1).replace(r'\/', '/').replace(r'\r', '').replace(r'\n', '')
+
+            s = re.search(r'data-ru_subtitle="(.*?)"', html)
+            if s:
+                surl = s.group(1)
+
+        if purl:
+            item = xbmcgui.ListItem(path=purl)
+            if surl:
+                item.setSubtitles([surl])
+
+            item.setProperty('inputstreamaddon', 'inputstream.adaptive')
+            item.setProperty('inputstream.adaptive.manifest_type', 'hls')
+            xbmcplugin.setResolvedUrl(handle, True, item)
 
 
 def get_html(url, params={}, post={}, noerror=True):
