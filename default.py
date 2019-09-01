@@ -278,9 +278,9 @@ def play_episode(params):
             if s:
 		html = get_html(s.group(1))
 		s = re.findall(r"{url:.?'(.*?)'", html, re.I and re.S)
-            	if s:
-	            item = xbmcgui.ListItem(path='https:' + s[-1] + '|referer=https://vio.to/')
-        	    xbmcplugin.setResolvedUrl(handle, True, item)
+        if s:
+            item = xbmcgui.ListItem(path='https:' + s[-1] + '|referer=https://vio.to/')
+            xbmcplugin.setResolvedUrl(handle, True, item)
 
         else:
 
