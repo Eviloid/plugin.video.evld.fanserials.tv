@@ -37,6 +37,7 @@ def main_menu():
     add_item('[B]Дорамы[/B]', params={'mode':'abc', 't':'5'}, fanart=fanart, isFolder=True)
     add_item('[B]Документальное[/B]', params={'mode':'abc', 't':'3'}, fanart=fanart, isFolder=True)
     add_item('[B]ТВ-шоу[/B]', params={'mode':'abc', 't':'6'}, fanart=fanart, isFolder=True)
+    add_item('[B]Новые сериалы[/B]', params={'mode':'new_serials'}, fanart=fanart, isFolder=True)
 
     # новинки
     html = get_html(BASE_URL + '/new/')
@@ -81,6 +82,31 @@ def get_description(url, id):
         db_store(id, plot)
 
     return plot
+
+
+def new_serials(params):
+    html = get_html(BASE_URL)
+
+    container = common.parseDOM(html, 'div', attrs={'class':'block-new-serials'})
+
+    serials = common.parseDOM(container, 'div', attrs={'class':'new-serials-poster'})
+    hrefs = common.parseDOM(container, 'a', attrs={'class':'field-poster'}, ret='href')
+
+    if len(serials) > 0:
+    	for i, serial in enumerate(serials):
+            img = common.parseDOM(serial, 'img', ret='src')[0]
+            title = common.parseDOM(serial, 'img', ret='alt')[0]
+            ids =  common.parseDOM(serial, 'a', attrs={'class':'popover-btn'}, ret='data-serial-id')
+            u = hrefs[i].strip('/')
+            desc = get_description(u, ids[0])
+            id = ids[0][-4:-20:-1][::-1]
+            id = id if id else '0'
+            fanart = ART_URL_PATTERN % (id, u)
+
+            add_item(title, params={'mode':'seasons', 'u':u, 'i':ids[0]}, poster=img, fanart=fanart, plot=desc, isFolder=True)
+
+    xbmcplugin.setContent(handle, 'tvshows')
+    xbmcplugin.endOfDirectory(handle)
 
 
 def ABClist(params):
@@ -391,6 +417,9 @@ mode = params['mode'] = params.get('mode', '')
 
 if mode == '':
     main_menu()
+
+if mode == 'new_serials':
+    new_serials(params)
 
 if mode == 'abc':
     ABClist(params)
