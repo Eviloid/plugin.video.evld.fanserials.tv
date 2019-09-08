@@ -93,7 +93,7 @@ def new_serials(params):
     hrefs = common.parseDOM(container, 'a', attrs={'class':'field-poster'}, ret='href')
 
     if len(serials) > 0:
-    	for i, serial in enumerate(serials):
+        for i, serial in enumerate(serials):
             img = common.parseDOM(serial, 'img', ret='src')[0]
             title = common.parseDOM(serial, 'img', ret='alt')[0]
             ids =  common.parseDOM(serial, 'a', attrs={'class':'popover-btn'}, ret='data-serial-id')
