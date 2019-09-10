@@ -61,8 +61,6 @@ def get_url(frame_url, referer, key='', iv=''):
 
         post_url = data['proto'] + data['host'] + '/vs'
 
-        params = {}
-
         post = {'q':crypted, 'ref':data['ref']}
 
         html = ''
