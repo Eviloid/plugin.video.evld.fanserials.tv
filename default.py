@@ -322,16 +322,49 @@ def play_episode(params):
 
             s = re.search(r'data-ru_subtitle="(.*?)"', html)
             if s:
-                surl = s.group(1)
+                surl = fix_sub(s.group(1))
 
         if purl:
             item = xbmcgui.ListItem(path=purl)
             if surl:
                 item.setSubtitles([surl])
+                xbmc.log(surl, xbmc.LOGWARNING)
 
             item.setProperty('inputstreamaddon', 'inputstream.adaptive')
             item.setProperty('inputstream.adaptive.manifest_type', 'hls')
             xbmcplugin.setResolvedUrl(handle, True, item)
+
+
+def fix_sub(surl):
+
+    if addon.getSetting('FixSubs') == 'false':
+	return surl
+
+    vtt = get_html(surl)
+
+    fixed = []
+
+    first = True
+
+    if vtt:
+        for i, line in enumerate(vtt.split('\n')):
+            if i == 0 and line != 'WEBVTT':
+                break
+            if re.search(r'\d+:\d+:\d+.\d+', line) and first:
+                break
+            s = re.findall(r'((\d+):)*(\d+:\d+\.\d+)', line)
+            if s:
+                fixed.append('%s:%s --> %s:%s' % (s[0][1].zfill(2), s[0][2], s[1][1].zfill(2), s[1][2]))
+                first = False
+            else:
+                fixed.append(line)
+        else:
+            temp_name = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'fansubs.vtt')
+            temp_file = open(temp_name, "w")
+            temp_file.write('\n'.join(fixed))
+            temp_file.close()
+            surl = temp_name
+    return surl
 
 
 def get_html(url, params={}, post={}, noerror=True):

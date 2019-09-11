@@ -6,6 +6,9 @@
         <setting type="sep"/>
         <setting label="Очистить кэш картинок" type="action" action="RunPlugin(plugin://$ID?mode=cleancache)" option="close"/>
     </category>
+    <category label="Разное">
+        <setting id="FixSubs" label="Исправлять субтитры" type="bool" default="false" visible="true"/>
+    </category>
     <category label="moonwalk.cc">
         <setting id="key" label="Key" type="text" default="9186a0bae4afec34c323aecb7754b7c848e016188eb8b5be677d54d3e70f9cbd" visible="true"/>
         <setting id="iv" label="iv" type="text" default="2ea2116c80fae4e90c1e2b2b765fcc45" visible="true"/>
