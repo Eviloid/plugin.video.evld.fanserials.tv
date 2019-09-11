@@ -322,7 +322,13 @@ def play_episode(params):
 
             s = re.search(r'data-ru_subtitle="(.*?)"', html)
             if s:
-                surl = fix_sub(s.group(1))
+                if s.group(1):
+                    surl = fix_sub(s.group(1))
+                else:
+                    s = re.search(r'data-en_subtitle="(.*?)"', html)
+                    if s:
+                        surl = fix_sub(s.group(1))
+
 
         if purl:
             item = xbmcgui.ListItem(path=purl)
