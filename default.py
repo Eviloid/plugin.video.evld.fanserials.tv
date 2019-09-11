@@ -337,8 +337,8 @@ def play_episode(params):
 
 def fix_sub(surl):
 
-    if addon.getSetting('FixSubs') == 'false':
-	return surl
+    if addon.getSetting('FixSubs') == 'false' or surl == '':
+        return surl
 
     vtt = get_html(surl)
 
