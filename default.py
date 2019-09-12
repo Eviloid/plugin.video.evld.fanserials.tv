@@ -327,7 +327,7 @@ def play_episode(params):
 
             s = re.search(r'data-en_subtitle="(.*?)"', html)
             if s:
-                surl_en = fix_sub(s.group(1))
+                surl_en = fix_sub(s.group(1), 'en_')
 
 
         if purl:
@@ -340,7 +340,7 @@ def play_episode(params):
             xbmcplugin.setResolvedUrl(handle, True, item)
 
 
-def fix_sub(surl):
+def fix_sub(surl, prefix='ru_'):
 
     if addon.getSetting('FixSubs') == 'false' or surl == '':
         return surl
@@ -364,7 +364,7 @@ def fix_sub(surl):
             else:
                 fixed.append(line)
         else:
-            temp_name = os.path.join(xbmc.translatePath('special://masterprofile'), 'fansubs.vtt')
+            temp_name = os.path.join(xbmc.translatePath('special://masterprofile'), prefix + 'fsubs.vtt')
             temp_file = open(temp_name, "w")
             temp_file.write('\n'.join(fixed))
             temp_file.close()
