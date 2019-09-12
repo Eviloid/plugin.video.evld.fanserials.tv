@@ -273,7 +273,8 @@ def play_episode(params):
     html = get_html(url)
 
     purl = ''
-    surl = ''
+    surl_ru = ''
+    surl_en = ''
 
     data = re.search(r"window\.playerData = '(\[.*\])';<", html, re.I and re.S)
     if data:
@@ -293,7 +294,7 @@ def play_episode(params):
 
             data = moon.get_url(src, url, key, iv)
             if 'subtitles' in data.keys():
-                surl = data['subtitles']['master_vtt'] if data['subtitles'] else ''
+                surl_ru = data['subtitles']['master_vtt'] if data['subtitles'] else ''
             if 'm3u8' in data.keys():
                 purl = data['m3u8']
 
@@ -322,19 +323,17 @@ def play_episode(params):
 
             s = re.search(r'data-ru_subtitle="(.*?)"', html)
             if s:
-                if s.group(1):
-                    surl = fix_sub(s.group(1))
-                else:
-                    s = re.search(r'data-en_subtitle="(.*?)"', html)
-                    if s:
-                        surl = fix_sub(s.group(1))
+                surl_ru = fix_sub(s.group(1))
+
+            s = re.search(r'data-en_subtitle="(.*?)"', html)
+            if s:
+                surl_en = fix_sub(s.group(1))
 
 
         if purl:
             item = xbmcgui.ListItem(path=purl)
-            if surl:
-                item.setSubtitles([surl])
-                xbmc.log(surl, xbmc.LOGWARNING)
+            if surl_ru or surl_en:
+                item.setSubtitles([surl_ru, surl_en])
 
             item.setProperty('inputstreamaddon', 'inputstream.adaptive')
             item.setProperty('inputstream.adaptive.manifest_type', 'hls')
@@ -365,7 +364,7 @@ def fix_sub(surl):
             else:
                 fixed.append(line)
         else:
-            temp_name = os.path.join(xbmc.translatePath('special://home'), 'userdata', 'fansubs.vtt')
+            temp_name = os.path.join(xbmc.translatePath('special://masterprofile'), 'fansubs.vtt')
             temp_file = open(temp_name, "w")
             temp_file.write('\n'.join(fixed))
             temp_file.close()
