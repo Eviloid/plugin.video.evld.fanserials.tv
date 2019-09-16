@@ -94,7 +94,7 @@ def new_serials(params):
 
     if len(serials) > 0:
         for i, serial in enumerate(serials):
-            img = common.parseDOM(serial, 'img', ret='src')[0]
+            img = common.parseDOM(serial, 'img', ret='src')[0].replace('/v1', '/v2')
             title = common.parseDOM(serial, 'img', ret='alt')[0]
             ids =  common.parseDOM(serial, 'a', attrs={'class':'popover-btn'}, ret='data-serial-id')
             u = hrefs[i].strip('/')
@@ -476,7 +476,7 @@ if mode == 'episode':
 
 if mode == 'cleancache':
     from tccleaner import TextureCacheCleaner as tcc
-    tcc().remove_like('%fanimg.site/serials/%', True)
+    tcc().remove_like('%fanimg.site%', True)
 
 if mode == 'updatekeys':
     res = common.fetchPage({'link':'https://raw.githubusercontent.com/WendyH/PHP-Scripts/master/moon4crack.ini'})
