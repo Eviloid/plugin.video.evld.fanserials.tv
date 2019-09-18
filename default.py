@@ -42,7 +42,7 @@ def main_menu():
     # новинки
     html = get_html(BASE_URL + '/new/')
 
-    container = common.parseDOM(html, 'div', attrs={'id':'"episode_list"'})
+    container = common.parseDOM(html, 'div', attrs={'id':'episode_list'})
     episodes = common.parseDOM(container, 'div', attrs={'class':'item-serial'})
 
     if len(episodes) > 0:
@@ -63,6 +63,7 @@ def main_menu():
 
             add_item(title, params={'mode':'episode', 'u':u}, plot=plot, thumb=img, fanart=fanart, isFolder=sound_mode==1, isPlayable=sound_mode==0)
 
+    add_item('[B]Поиск[/B]', params={'mode':'search'}, fanart=fanart, icon='DefaultAddonsSearch.png', isFolder=True)
 
     xbmcplugin.setContent(handle, 'videos')
     xbmcplugin.endOfDirectory(handle)
@@ -82,6 +83,32 @@ def get_description(url, id):
         db_store(id, plot)
 
     return plot
+
+
+def search(params):
+    keyword = ''
+
+    kbd = xbmc.Keyboard('', 'Поиск:')
+    kbd.doModal()
+    if kbd.isConfirmed():
+        keyword = kbd.getText()
+
+    if keyword:
+        html = get_html('%s/search/' % BASE_URL, params={'query':keyword})
+
+        serials = common.parseDOM(html, 'div', attrs={'class':'item-search-serial'})
+
+        if len(serials) > 0:
+            for serial in serials:
+                img = common.parseDOM(serial, 'img', ret='src')[0].replace('/v1','/v2')
+                title = common.parseDOM(serial, 'img', ret='alt')[0]
+                u = common.parseDOM(serial, 'a', ret='href')[0].strip('/')
+                desc = common.parseDOM(serial, 'p', attrs={'class':'textailor'})[0]
+
+                add_item(title, params={'mode':'seasons', 'u':u}, poster=img, fanart=fanart, plot=desc, isFolder=True)
+
+    xbmcplugin.setContent(handle, 'tvshows')
+    xbmcplugin.endOfDirectory(handle)
 
 
 def new_serials(params):
@@ -158,6 +185,8 @@ def show_seasons(params):
     url = '%s/%s/' % (BASE_URL, params['u'])
 
     html = get_html(url)
+
+    params['i'] = params.get('i', common.parseDOM(html, 'div', attrs={'class':'serial-item-rating clickonce'}, ret='data-id')[0])
 
     id = params['i'][-4:-20:-1][::-1]
     id = id if id else '0'
@@ -455,6 +484,9 @@ mode = params['mode'] = params.get('mode', '')
 
 if mode == '':
     main_menu()
+
+if mode == 'search':
+    search(params)
 
 if mode == 'new_serials':
     new_serials(params)
