@@ -302,8 +302,7 @@ def play_episode(params):
     html = get_html(url)
 
     purl = ''
-    surl_ru = ''
-    surl_en = ''
+    surls = []
 
     data = re.search(r"window\.playerData = '(\[.*\])';<", html, re.I and re.S)
     if data:
@@ -323,7 +322,8 @@ def play_episode(params):
 
             data = moon.get_url(src, url, key, iv)
             if 'subtitles' in data.keys():
-                surl_ru = data['subtitles']['master_vtt'] if data['subtitles'] else ''
+		if data['subtitles']:
+                     surls.append(data['subtitles']['master_vtt'])
             if 'm3u8' in data.keys():
                 purl = data['m3u8']
 
@@ -352,17 +352,16 @@ def play_episode(params):
 
             s = re.search(r'data-ru_subtitle="(.*?)"', html)
             if s:
-                surl_ru = fix_sub(s.group(1))
+             	surls.append(fix_sub(s.group(1)))
 
             s = re.search(r'data-en_subtitle="(.*?)"', html)
             if s:
-                surl_en = fix_sub(s.group(1), 'en_')
-
+             	surls.append(fix_sub(s.group(1), 'en_'))
 
         if purl:
             item = xbmcgui.ListItem(path=purl)
-            if surl_ru or surl_en:
-                item.setSubtitles([surl_ru, surl_en])
+            if surls:
+                item.setSubtitles([i for i in surls if i] )
 
             item.setProperty('inputstreamaddon', 'inputstream.adaptive')
             item.setProperty('inputstream.adaptive.manifest_type', 'hls')
