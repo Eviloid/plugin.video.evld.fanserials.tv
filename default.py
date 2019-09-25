@@ -114,7 +114,7 @@ def search(params):
 def new_serials(params):
     html = get_html(BASE_URL)
 
-    container = common.parseDOM(html, 'div', attrs={'class':'block-new-serials'})
+    container = common.parseDOM(html, 'div', attrs={'class':'block-new-serials[ a-z0-9-]*'})
 
     serials = common.parseDOM(container, 'div', attrs={'class':'new-serials-poster'})
     hrefs = common.parseDOM(container, 'a', attrs={'class':'field-poster'}, ret='href')
