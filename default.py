@@ -322,8 +322,8 @@ def play_episode(params):
 
             data = moon.get_url(src, url, key, iv)
             if 'subtitles' in data.keys():
-		if data['subtitles']:
-                     surls.append(data['subtitles']['master_vtt'])
+                if data['subtitles']:
+                    surls.append(data['subtitles']['master_vtt'])
             if 'm3u8' in data.keys():
                 purl = data['m3u8']
 
@@ -352,11 +352,11 @@ def play_episode(params):
 
             s = re.search(r'data-ru_subtitle="(.*?)"', html)
             if s:
-             	surls.append(fix_sub(s.group(1)))
+                surls.append(fix_sub(s.group(1)))
 
             s = re.search(r'data-en_subtitle="(.*?)"', html)
             if s:
-             	surls.append(fix_sub(s.group(1), 'en_'))
+                surls.append(fix_sub(s.group(1), 'en_'))
 
         if purl:
             item = xbmcgui.ListItem(path=purl)
