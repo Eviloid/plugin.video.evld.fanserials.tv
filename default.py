@@ -401,7 +401,11 @@ def fix_sub(surl, prefix='ru_'):
 
 
 def get_html(url, params={}, post={}, noerror=True):
-    headers = {'Referer':url, 'User-Agent':'Mozilla/5.0 (Windows NT 6.2; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0'}
+    headers = {'Referer':url, 'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0'}
+
+    # pass cloudflare
+    #headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36'
+    #headers['Cookie'] = '__cfduid=d41e929703f6806254a1b79365d77577e1569772156; cf_clearance=78288cb1f42449d012723c67b08cc75541ad02ab-1569772160-1800-150'
 
     html = ''
 
