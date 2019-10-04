@@ -323,7 +323,10 @@ def play_episode(params):
             data = moon.get_url(src, url, key, iv)
             if 'subtitles' in data.keys():
                 if data['subtitles']:
-                    surls.append(data['subtitles']['master_vtt'])
+                    surl = data['subtitles']['master_vtt']
+                    if surl[:2] == '//': surl = src.split("//")[0] + surl
+                    surls.append(surl)
+
             if 'm3u8' in data.keys():
                 purl = data['m3u8']
 
