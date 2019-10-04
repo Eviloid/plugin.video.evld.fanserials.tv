@@ -107,8 +107,8 @@ def search(params):
 
                 add_item(title, params={'mode':'seasons', 'u':u}, poster=img, fanart=fanart, plot=desc, isFolder=True)
 
-    xbmcplugin.setContent(handle, 'tvshows')
-    xbmcplugin.endOfDirectory(handle)
+        xbmcplugin.setContent(handle, 'tvshows')
+        xbmcplugin.endOfDirectory(handle)
 
 
 def new_serials(params):
