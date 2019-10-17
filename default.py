@@ -30,6 +30,12 @@ ART_URL_PATTERN = 'http://fanimg.site/serials/%s/h2/%s.jpg'
 
 sound_mode = int(addon.getSetting('sound'))
 
+if addon.getSetting('UseProxy') == 'true':
+    proxy = addon.getSetting('Proxy')
+    ph = urllib2.ProxyHandler({'https':proxy, 'http':proxy})
+    urllib2.install_opener(urllib2.build_opener(ph))
+
+
 def main_menu():
     add_item('[B]Сериалы[/B]', params={'mode':'abc', 't':'0'}, fanart=fanart, isFolder=True)
     add_item('[B]Аниме[/B]', params={'mode':'abc', 't':'2'}, fanart=fanart, isFolder=True)
