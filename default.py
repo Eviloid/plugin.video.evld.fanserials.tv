@@ -30,11 +30,10 @@ ART_URL_PATTERN = 'http://fanimg.site/serials/%s/h2/%s.jpg'
 
 sound_mode = int(addon.getSetting('sound'))
 
+proxy = ''
+
 if addon.getSetting('UseProxy') == 'true':
     proxy = addon.getSetting('Proxy')
-    ph = urllib2.ProxyHandler({'https':proxy, 'http':proxy})
-    urllib2.install_opener(urllib2.build_opener(ph))
-
 
 def main_menu():
     add_item('[B]Сериалы[/B]', params={'mode':'abc', 't':'0'}, fanart=fanart, isFolder=True)
@@ -118,7 +117,7 @@ def search(params):
 
 
 def new_serials(params):
-    html = get_html(BASE_URL)
+    html = get_html('%s/' % BASE_URL)
 
     container = common.parseDOM(html, 'div', attrs={'class':'block-new-serials[ a-z0-9-]*'})
 
@@ -419,7 +418,15 @@ def get_html(url, params={}, post={}, noerror=True):
     html = ''
 
     try:
-        conn = urllib2.urlopen(urllib2.Request('%s?%s' % (url, urllib.urlencode(params)), headers=headers))
+        request = urllib2.Request('%s?%s' % (url, urllib.urlencode(params)), headers=headers)
+
+        if proxy:
+            ph = urllib2.ProxyHandler({'https':proxy, 'http':proxy})
+            opener = urllib2.build_opener(ph)
+            conn = opener.open(request)
+        else:
+            conn = urllib2.urlopen(request)
+
         html = conn.read()
         conn.close()
 
