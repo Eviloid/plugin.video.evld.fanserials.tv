@@ -201,7 +201,7 @@ def show_seasons(params):
     plot = get_description(params['u'], params['i'])
 
     container = common.parseDOM(html, 'div', attrs={'itemprop':'containsSeason'})
-    seasons = common.parseDOM(container, 'li')
+    seasons = common.parseDOM(container[0] if len(container) > 1 else container, 'li')
 
     if len(seasons) > 0:
         for season in seasons:
