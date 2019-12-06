@@ -65,8 +65,9 @@ def main_menu():
             title = '[COLOR=yellow]%s[/COLOR] [COLOR=gray]%s[/COLOR]' % (common.replaceHTMLCodes(desc), plot)
 
             u = common.parseDOM(episode, 'a', ret='href')[0]
+            menu = [('Все серии', 'Container.Update("%s?mode=jump&u=%s")' % (sys.argv[0], urllib.quote_plus(u)))]
 
-            add_item(title, params={'mode':'episode', 'u':u}, plot=plot, thumb=img, fanart=fanart, isFolder=sound_mode==1, isPlayable=sound_mode==0)
+            add_item(title, params={'mode':'episode', 'u':u}, plot=plot, thumb=img, fanart=fanart, isFolder=sound_mode==1, isPlayable=sound_mode==0, menu=menu)
 
     add_item('[B]Поиск[/B]', params={'mode':'search'}, fanart=fanart, icon='DefaultAddonsSearch.png', isFolder=True)
 
@@ -114,6 +115,19 @@ def search(params):
 
         xbmcplugin.setContent(handle, 'tvshows')
         xbmcplugin.endOfDirectory(handle)
+
+
+def jump_to_seasons(params):
+    url = BASE_URL + params['u']
+    html = get_html(url)
+
+    container = common.parseDOM(html, 'ul', attrs={'class':'breadcrumbs'})
+    hrefs = common.parseDOM(container, 'a', attrs={'itemprop':'url'}, ret='href')
+
+    if len(hrefs) > 1:
+        params['mode'] = 'seasons'
+        params['u'] = hrefs[1].strip('/')
+        show_seasons(params)
 
 
 def new_serials(params):
@@ -444,7 +458,7 @@ def get_html(url, params={}, post={}, noerror=True):
     return html 
 
 
-def add_item(title, params={}, icon='', banner='', fanart='', poster='', thumb='', plot='', isFolder=False, isPlayable=False, url=None):
+def add_item(title, params={}, icon='', banner='', fanart='', poster='', thumb='', plot='', isFolder=False, isPlayable=False, url=None, menu=None):
     if url == None: url = '%s?%s' % (sys.argv[0], urllib.urlencode(params))
 
     item = xbmcgui.ListItem(title, iconImage = icon, thumbnailImage = thumb)
@@ -462,6 +476,9 @@ def add_item(title, params={}, icon='', banner='', fanart='', poster='', thumb='
         item.setArt({'poster': poster})
     if thumb != '':
         item.setArt({'thumb': thumb})
+
+    if menu:
+        item.addContextMenuItems(menu)
 
     xbmcplugin.addDirectoryItem(handle, url=url, listitem=item, isFolder=isFolder)
 
@@ -506,6 +523,9 @@ if mode == '':
 
 if mode == 'search':
     search(params)
+
+if mode == 'jump':
+    jump_to_seasons(params)
 
 if mode == 'new_serials':
     new_serials(params)
