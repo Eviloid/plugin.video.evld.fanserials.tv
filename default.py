@@ -25,8 +25,9 @@ fanart = xbmc.translatePath(os.path.join(Pdir, 'fanart.jpg'))
 db = xbmc.translatePath(os.path.join(Pdir, 'serials.db'))
 
 BASE_URL = 'http://' + addon.getSetting('host')
-IMG_URL_PATTERN = 'http://fanimg.site/serials/%s/v2/%s.jpg'
-ART_URL_PATTERN = 'http://fanimg.site/serials/%s/h2/%s.jpg'
+IMG_URL_PATTERN = BASE_URL.strip('/') + '/storage/serials/%s/v2/%s.jpg'
+ART_URL_PATTERN = BASE_URL.strip('/') + '/storage/serials/%s/h2/%s.jpg'
+
 
 sound_mode = int(addon.getSetting('sound'))
 
@@ -39,7 +40,7 @@ def main_menu():
     add_item('[B]Сериалы[/B]', params={'mode':'abc', 't':'0'}, fanart=fanart, isFolder=True)
     add_item('[B]Аниме[/B]', params={'mode':'abc', 't':'2'}, fanart=fanart, isFolder=True)
     add_item('[B]Мультсериалы[/B]', params={'mode':'abc', 't':'1'}, fanart=fanart, isFolder=True)
-    add_item('[B]Дорамы[/B]', params={'mode':'abc', 't':'5'}, fanart=fanart, isFolder=True)
+#    add_item('[B]Дорамы[/B]', params={'mode':'abc', 't':'5'}, fanart=fanart, isFolder=True)
     add_item('[B]Документальное[/B]', params={'mode':'abc', 't':'3'}, fanart=fanart, isFolder=True)
     add_item('[B]ТВ-шоу[/B]', params={'mode':'abc', 't':'6'}, fanart=fanart, isFolder=True)
     add_item('[B]Новые сериалы[/B]', params={'mode':'new_serials'}, fanart=fanart, isFolder=True)
@@ -147,9 +148,9 @@ def new_serials(params):
             desc = get_description(u, ids[0])
             id = ids[0][-4:-20:-1][::-1]
             id = id if id else '0'
-            fanart = ART_URL_PATTERN % (id, u)
+            fan = ART_URL_PATTERN % (id, u)
 
-            add_item(title, params={'mode':'seasons', 'u':u, 'i':ids[0]}, poster=img, fanart=fanart, plot=desc, isFolder=True)
+            add_item(title, params={'mode':'seasons', 'u':u, 'i':ids[0]}, poster=img, fanart=fan, plot=desc, isFolder=True)
 
     xbmcplugin.setContent(handle, 'tvshows')
     xbmcplugin.endOfDirectory(handle)
@@ -190,11 +191,11 @@ def show_serials(params):
         id = id if id else '0'
 
         img = IMG_URL_PATTERN % (id, u)
-        fanart = ART_URL_PATTERN % (id, u)
+        fan = ART_URL_PATTERN % (id, u)
 
         desc = get_description(u, ids[i])
 
-        add_item(title, params={'mode':'seasons', 'u':u, 'i':ids[i]}, poster=img, fanart=fanart, plot=desc, isFolder=True)
+        add_item(title, params={'mode':'seasons', 'u':u, 'i':ids[i]}, poster=img, fanart=fan, plot=desc, isFolder=True)
 
     xbmcplugin.setContent(handle, 'tvshows')
     xbmcplugin.endOfDirectory(handle)
@@ -211,7 +212,7 @@ def show_seasons(params):
     id = id if id else '0'
 
     img = IMG_URL_PATTERN % (id, params['u'])
-    fanart = ART_URL_PATTERN % (id, params['u'])
+    fan = ART_URL_PATTERN % (id, params['u'])
     plot = get_description(params['u'], params['i'])
 
     container = common.parseDOM(html, 'div', attrs={'itemprop':'containsSeason'})
@@ -223,7 +224,7 @@ def show_seasons(params):
 
             u = common.parseDOM(season, 'a', ret='href')[0].strip('/')
 
-            add_item(title, params={'mode':'season', 'u':u}, plot=plot, poster=img, fanart=fanart, isFolder=True)
+            add_item(title, params={'mode':'season', 'u':u}, plot=plot, poster=img, fanart=fan, isFolder=True)
     else:
         # moonwalk
         data = re.search(r"window\.playerData = '(\[.*\])';<", html, re.I and re.S)
@@ -237,7 +238,7 @@ def show_seasons(params):
             seasons = sorted(data[o]['seasons'])
             for season in seasons:
                 title = 'Сезон ' + str(season)
-                add_item(title, params={'mode':'season', 'u':params['u'], 's':season, 'o':o}, plot=plot, poster=img, fanart=fanart, isFolder=True)
+                add_item(title, params={'mode':'season', 'u':params['u'], 's':season, 'o':o}, plot=plot, poster=img, fanart=fan, isFolder=True)
     
     if len(seasons) == 0:
         show_season(params)
@@ -548,6 +549,7 @@ if mode == 'episode':
 if mode == 'cleancache':
     from tccleaner import TextureCacheCleaner as tcc
     tcc().remove_like('%fanimg.site%', True)
+    tcc().remove_like('%fanserials%', True)
 
 if mode == 'updatekeys':
     res = common.fetchPage({'link':'https://raw.githubusercontent.com/WendyH/PHP-Scripts/master/moon4crack.ini'})
