@@ -76,10 +76,10 @@ def main_menu():
     xbmcplugin.endOfDirectory(handle)
 
 
-def get_description(url, id):
+def get_description(url, id, force=False):
     plot = db_restore(id)
 
-    if plot == None:
+    if plot == None or force:
         html = get_html('%s/%s/' % (BASE_URL, url))
         desc = common.parseDOM(html, 'div', attrs={'class':'body', 'itemprop':'description'})
         if len(desc) > 0:
@@ -150,7 +150,8 @@ def new_serials(params):
             id = id if id else '0'
             fan = ART_URL_PATTERN % (id, u)
 
-            add_item(title, params={'mode':'seasons', 'u':u, 'i':ids[0]}, poster=img, fanart=fan, plot=desc, isFolder=True)
+            menu = [('Обновить описание', 'Container.Update("%s?mode=description&u=%s&id=%s", False)' % (sys.argv[0], urllib.quote_plus(u), ids[0]))]
+            add_item(title, params={'mode':'seasons', 'u':u, 'i':ids[0]}, poster=img, fanart=fan, plot=desc, isFolder=True, menu=menu)
 
     xbmcplugin.setContent(handle, 'tvshows')
     xbmcplugin.endOfDirectory(handle)
@@ -195,7 +196,8 @@ def show_serials(params):
 
         desc = get_description(u, ids[i])
 
-        add_item(title, params={'mode':'seasons', 'u':u, 'i':ids[i]}, poster=img, fanart=fan, plot=desc, isFolder=True)
+        menu = [('Обновить описание', 'Container.Update("%s?mode=description&u=%s&id=%s", False)' % (sys.argv[0], urllib.quote_plus(u), ids[i]))]
+        add_item(title, params={'mode':'seasons', 'u':u, 'i':ids[i]}, poster=img, fanart=fan, plot=desc, isFolder=True, menu=menu)
 
     xbmcplugin.setContent(handle, 'tvshows')
     xbmcplugin.endOfDirectory(handle)
@@ -491,19 +493,21 @@ def db_store(n, plot):
     plot = plot.replace("'","XXCC").replace('"',"XXDD")
     id = "n" + n
     try:
-        cursor.execute("CREATE TABLE " + id + " (plot VARCHAR(512), i VARCHAR(1));")
+        cursor.execute('CREATE TABLE IF NOT EXISTS {0} (plot VARCHAR(512), i VARCHAR(1));'.format(id))
         connect.commit()
     except:
         pass 
     else:
-        cursor.execute('INSERT INTO ' + id + ' (plot, i) VALUES ("' + plot + '", "1");')
+        cursor.execute('DELETE FROM {0};'.format(id))
+        connect.commit()
+        cursor.execute('INSERT INTO {0} (plot, i) VALUES ("{1}", "1");'.format(id, plot.encode('utf-8')))
         connect.commit()
 
 def db_restore(n):
     id = "n" + n
     plot = None
     try:
-        cursor.execute('SELECT plot FROM ' + id + ';')
+        cursor.execute('SELECT plot FROM {0};'.format(id))
         connect.commit()
         data = cursor.fetchall()
 
@@ -527,6 +531,9 @@ if mode == 'search':
 
 if mode == 'jump':
     jump_to_seasons(params)
+
+if mode == 'description':
+    get_description(params['u'], params['id'], True)
 
 if mode == 'new_serials':
     new_serials(params)
