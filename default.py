@@ -9,7 +9,7 @@ import CommonFunctions
 import sqlite3 as sql
 import moonwalk as moon
 
-PLUGIN_NAME   = 'FanSerials'
+PLUGIN_NAME = 'FanSerials'
 
 common = CommonFunctions
 common.plugin = PLUGIN_NAME
@@ -79,7 +79,7 @@ def main_menu():
 def get_description(url, id, force=False):
     plot = db_restore(id)
 
-    if plot == None or force:
+    if plot is None or force:
         html = get_html('%s/%s/' % (BASE_URL, url))
         desc = common.parseDOM(html, 'div', attrs={'class':'body', 'itemprop':'description'})
         if len(desc) > 0:
@@ -143,7 +143,7 @@ def new_serials(params):
         for i, serial in enumerate(serials):
             img = common.parseDOM(serial, 'img', ret='src')[0].replace('/v1', '/v2')
             title = common.parseDOM(serial, 'img', ret='alt')[0]
-            ids =  common.parseDOM(serial, 'a', attrs={'class':'popover-btn'}, ret='data-serial-id')
+            ids = common.parseDOM(serial, 'a', attrs={'class':'popover-btn'}, ret='data-serial-id')
             u = hrefs[i].strip('/')
             desc = get_description(u, ids[0])
             id = ids[0][-4:-20:-1][::-1]
@@ -241,7 +241,7 @@ def show_seasons(params):
             for season in seasons:
                 title = 'Сезон ' + str(season)
                 add_item(title, params={'mode':'season', 'u':params['u'], 's':season, 'o':o}, plot=plot, poster=img, fanart=fan, isFolder=True)
-    
+
     if len(seasons) == 0:
         show_season(params)
         return
@@ -369,6 +369,20 @@ def play_episode(params):
                 item = xbmcgui.ListItem(path=s.group(2))
                 xbmcplugin.setResolvedUrl(handle, True, item)
 
+        elif 'ok.ru' in iframe:
+            html = get_html(re.sub(r'^//', 'https://', iframe))
+            s = re.search(r'data-module="OKVideo" data-options="(.*?)" data-player-container-id', html)
+            if s:
+                data = s.group(1)
+                data = data.replace('\\\\', '\\')
+                data = data.replace('&quot;', '"')
+                data = data.replace('\\u0026', '&')
+                data = data.replace('\\"', '"')
+
+                url = re.search(r'"hlsManifestUrl":"(.*?)",', data).group(1)
+                item = xbmcgui.ListItem(path=url)
+                xbmcplugin.setResolvedUrl(handle, True, item)
+
         else:
             html = get_html(iframe)
             s = re.search(r'"hls":"(.*?\.m3u8)', html)
@@ -386,7 +400,7 @@ def play_episode(params):
         if purl:
             item = xbmcgui.ListItem(path=purl)
             if surls:
-                item.setSubtitles([i for i in surls if i] )
+                item.setSubtitles([i for i in surls if i])
 
             item.setProperty('inputstreamaddon', 'inputstream.adaptive')
             item.setProperty('inputstream.adaptive.manifest_type', 'hls')
@@ -458,15 +472,15 @@ def get_html(url, params={}, post={}, noerror=True):
 
 
 def add_item(title, params={}, icon='', banner='', fanart='', poster='', thumb='', plot='', isFolder=False, isPlayable=False, url=None, menu=None):
-    if url == None: url = '%s?%s' % (sys.argv[0], urllib.urlencode(params))
+    if url is None: url = '%s?%s' % (sys.argv[0], urllib.urlencode(params))
 
-    item = xbmcgui.ListItem(title, iconImage = icon, thumbnailImage = thumb)
+    item = xbmcgui.ListItem(title, iconImage=icon, thumbnailImage=thumb)
     item.setInfo(type='video', infoLabels={'title': title, 'plot': plot})
 
     if isPlayable:
         item.setProperty('isPlayable', 'true')
         item.setProperty('mediatype', 'video')
-    
+
     if banner != '':
         item.setArt({'banner': banner})
     if fanart != '':
@@ -530,6 +544,7 @@ if mode == 'jump':
 
 if mode == 'description':
     get_description(params['u'], params['id'], True)
+    xbmcplugin.endOfDirectory(handle, False, True, False)
     xbmc.executebuiltin('Container.Refresh')
 
 if mode == 'new_serials':
