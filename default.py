@@ -323,6 +323,12 @@ def play_episode(params):
 
     html = get_html(url)
 
+    block = common.parseDOM(html, 'div', attrs={'class':'limited-block-content'})
+    if block:
+        content = common.parseDOM(block, 'div', attrs={'class':'heading'})[0]
+        xbmcgui.Dialog().notification(PLUGIN_NAME, content, icon, 2000, True)
+        return
+
     purl = ''
     surls = []
 
