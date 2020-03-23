@@ -123,7 +123,7 @@ def jump_to_seasons(params):
     html = get_html(url)
 
     container = common.parseDOM(html, 'ul', attrs={'class':'breadcrumbs'})
-    hrefs = common.parseDOM(container, 'a', attrs={'itemprop':'url'}, ret='href')
+    hrefs = common.parseDOM(container, 'a', attrs={'itemprop':'item'}, ret='href')
 
     if len(hrefs) > 1:
         params['mode'] = 'seasons'
