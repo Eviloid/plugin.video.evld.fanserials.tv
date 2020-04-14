@@ -405,43 +405,42 @@ def play_episode(params):
 
         if purl:
             item = xbmcgui.ListItem(path=purl)
+            surls = [i for i in surls if i]
             if surls:
-                item.setSubtitles([i for i in surls if i])
-
-            item.setProperty('inputstreamaddon', 'inputstream.adaptive')
-            item.setProperty('inputstream.adaptive.manifest_type', 'hls')
+                item.setSubtitles(surls)
+            else:
+                item.setProperty('inputstreamaddon', 'inputstream.adaptive')
+                item.setProperty('inputstream.adaptive.manifest_type', 'hls')
             xbmcplugin.setResolvedUrl(handle, True, item)
 
 
 def fix_sub(surl, prefix='ru_'):
 
-    if addon.getSetting('FixSubs') == 'false' or surl == '':
-        return surl
+    if surl:
+        vtt = get_html(surl)
 
-    vtt = get_html(surl)
+        fixed = []
 
-    fixed = []
+        first = True
 
-    first = True
-
-    if vtt:
-        for i, line in enumerate(vtt.split('\n')):
-            if i == 0 and line != 'WEBVTT':
-                break
-            if re.search(r'\d+:\d+:\d+.\d+', line) and first:
-                break
-            s = re.findall(r'((\d+):)*(\d+:\d+\.\d+)', line)
-            if s:
-                fixed.append('%s:%s --> %s:%s' % (s[0][1].zfill(2), s[0][2], s[1][1].zfill(2), s[1][2]))
-                first = False
+        if vtt:
+            for i, line in enumerate(vtt.split('\n')):
+                if i == 0 and line != 'WEBVTT':
+                    break
+                if re.search(r'\d+:\d+:\d+.\d+', line) and first:
+                    break
+                s = re.findall(r'((\d+):)*(\d+:\d+\.\d+)', line)
+                if s:
+                    fixed.append('%s:%s --> %s:%s' % (s[0][1].zfill(2), s[0][2], s[1][1].zfill(2), s[1][2]))
+                    first = False
+                else:
+                    fixed.append(line)
             else:
-                fixed.append(line)
-        else:
-            temp_name = os.path.join(xbmc.translatePath('special://masterprofile'), prefix + 'fsubs.vtt')
-            temp_file = open(temp_name, "w")
-            temp_file.write('\n'.join(fixed))
-            temp_file.close()
-            surl = temp_name
+                temp_name = os.path.join(xbmc.translatePath('special://masterprofile'), prefix + 'fsubs.vtt')
+                temp_file = open(temp_name, "w")
+                temp_file.write('\n'.join(fixed))
+                temp_file.close()
+                surl = temp_name
     return surl
 
 

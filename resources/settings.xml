@@ -7,8 +7,6 @@
         <setting label="Очистить кэш картинок" type="action" action="RunPlugin(plugin://$ID?mode=cleancache)" option="close"/>
     </category>
     <category label="Разное">
-        <setting id="FixSubs" label="Исправлять субтитры" type="bool" default="false" visible="true"/>
-        <setting type="sep"/>
         <setting id="UseProxy" label= "Использовать прокси" type="bool" default="false" visible="true"/>
         <setting id="Proxy" label= "Прокси" type="text" default="176.105.100.62:3128" visible="eq(-1,true)"/>
     </category>
