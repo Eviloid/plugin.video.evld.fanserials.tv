@@ -31,11 +31,6 @@ ART_URL_PATTERN = BASE_URL.strip('/') + '/storage/serials/%s/h2/%s.jpg'
 
 sound_mode = int(addon.getSetting('sound'))
 
-proxy = ''
-
-if addon.getSetting('UseProxy') == 'true':
-    proxy = addon.getSetting('Proxy')
-
 def main_menu():
     add_item('[B]Сериалы[/B]', params={'mode':'abc', 't':'0'}, fanart=fanart, isFolder=True)
     add_item('[B]Аниме[/B]', params={'mode':'abc', 't':'2'}, fanart=fanart, isFolder=True)
@@ -325,9 +320,12 @@ def play_episode(params):
 
     block = common.parseDOM(html, 'div', attrs={'class':'limited-block-content'})
     if block:
-        content = common.parseDOM(block, 'div', attrs={'class':'heading'})[0]
-        xbmcgui.Dialog().notification(PLUGIN_NAME, content, icon, 2000, True)
-        return
+        if addon.getSetting('UseProxy') == 'true':
+            html = get_html(url, useProxy=True)
+        else:
+            content = common.parseDOM(block, 'div', attrs={'class':'heading'})[0]
+            xbmcgui.Dialog().notification(PLUGIN_NAME, content, icon, 2000, True)
+            return
 
     purl = ''
     surls = []
@@ -444,20 +442,20 @@ def fix_sub(surl, prefix='ru_'):
     return surl
 
 
-def get_html(url, params={}, post={}, noerror=True):
+def get_html(url, params={}, noerror=True, useProxy=False):
     headers = {'Referer':url, 'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0'}
 
     html = ''
 
     try:
-        request = urllib2.Request('%s?%s' % (url, urllib.urlencode(params)), headers=headers)
+        url = '%s?%s' % (url, urllib.urlencode(params))
 
-        if proxy:
-            ph = urllib2.ProxyHandler({'https':proxy, 'http':proxy})
-            opener = urllib2.build_opener(ph)
-            conn = opener.open(request)
-        else:
-            conn = urllib2.urlopen(request)
+        if useProxy:
+            headers['Referer'] = 'http://sd32.com/'
+            url = '%s?%s' % ('http://sd32.com/browse.php', urllib.urlencode({'u':url, 'b':4}))
+
+        request = urllib2.Request(url, headers=headers)
+        conn = urllib2.urlopen(request)
 
         html = conn.read()
         conn.close()

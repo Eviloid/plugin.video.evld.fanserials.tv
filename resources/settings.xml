@@ -7,8 +7,7 @@
         <setting label="Очистить кэш картинок" type="action" action="RunPlugin(plugin://$ID?mode=cleancache)" option="close"/>
     </category>
     <category label="Разное">
-        <setting id="UseProxy" label= "Использовать прокси" type="bool" default="false" visible="true"/>
-        <setting id="Proxy" label= "Прокси" type="text" default="176.105.100.62:3128" visible="eq(-1,true)"/>
+        <setting id="UseProxy" label= "Использовать прокси если &quot;Контент недоступен&quot;" type="bool" default="false" visible="true"/>
     </category>
     <category label="moonwalk.cc">
         <setting id="key" label="Key" type="text" default="9186a0bae4afec34c323aecb7754b7c848e016188eb8b5be677d54d3e70f9cbd" visible="true"/>
