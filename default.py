@@ -3,6 +3,8 @@
 # Eviloid, 22.08.2019
 
 import os, urllib, sys, urllib2, re, cookielib, json
+import urlparse as parse
+
 import xbmc, xbmcgui, xbmcplugin, xbmcaddon
 import CommonFunctions
 
@@ -390,16 +392,31 @@ def play_episode(params):
         else:
             html = get_html(iframe)
             s = re.search(r'"hls":"(.*?\.m3u8)', html)
+            if not s:
+                html = get_html(iframe, useProxy=True, referer=url)
+                s = re.search(r'"hls":"(.*?\.m3u8)', html)
+
             if s:
                 purl = s.group(1).replace(r'\/', '/').replace(r'\r', '').replace(r'\n', '')
 
             s = re.search(r'data-ru_subtitle="(.*?)"', html)
+
+            iframe_parts = parse.urlsplit(iframe)
+
             if s:
-                surls.append(fix_sub(s.group(1)))
+                surl = s.group(1)
+                if  surl and surl[0] == '/':
+                    surl = '%s://%s%s' % (iframe_parts.scheme, iframe_parts.netloc, surl)
+
+                surls.append(fix_sub(surl))
 
             s = re.search(r'data-en_subtitle="(.*?)"', html)
             if s:
-                surls.append(fix_sub(s.group(1), 'en_'))
+                surl = s.group(1)
+                if surl and surl[0] == '/':
+                    surl = '%s://%s%s' % (iframe_parts.scheme, iframe_parts.netloc, surl)
+
+                surls.append(fix_sub(surl, 'en_'))
 
         if purl:
             item = xbmcgui.ListItem(path=purl)
@@ -442,17 +459,21 @@ def fix_sub(surl, prefix='ru_'):
     return surl
 
 
-def get_html(url, params={}, noerror=True, useProxy=False):
+def get_html(url, params={}, noerror=True, useProxy=False, referer=None):
     headers = {'Referer':url, 'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0'}
+
+    if referer:
+        headers['Referer'] = referer
 
     html = ''
 
     try:
-        url = '%s?%s' % (url, urllib.urlencode(params))
+        if params:
+            url = '%s?%s' % (url, urllib.urlencode(params))
 
         if useProxy:
-            headers['Referer'] = 'http://sd32.com/'
-            url = '%s?%s' % ('http://sd32.com/browse.php', urllib.urlencode({'u':url, 'b':4}))
+            url = url.replace(BASE_URL, 'http://fanserial.net')
+            url = '%s?%s' % ('https://us4.free-proxy.com/browse.php', urllib.urlencode({'u':url, 'b':4}))
 
         request = urllib2.Request(url, headers=headers)
         conn = urllib2.urlopen(request)
