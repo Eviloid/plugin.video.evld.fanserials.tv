@@ -9,7 +9,6 @@ import xbmc, xbmcgui, xbmcplugin, xbmcaddon
 import CommonFunctions
 
 import sqlite3 as sql
-import moonwalk as moon
 
 PLUGIN_NAME = 'FanSerials'
 
@@ -143,8 +142,8 @@ def new_serials(params):
             ids = common.parseDOM(serial, 'a', attrs={'class':'popover-btn'}, ret='data-serial-id')
             u = hrefs[i].strip('/')
             desc = get_description(u, ids[0])
-            id = ids[0][-4:-20:-1][::-1]
-            id = id if id else '0'
+         
+            id = int(ids[0]) / 1000
             fan = ART_URL_PATTERN % (id, u)
 
             menu = [('Обновить описание', 'Container.Update("%s?mode=description&u=%s&id=%s", False)' % (sys.argv[0], urllib.quote_plus(u), ids[0]))]
@@ -185,8 +184,7 @@ def show_serials(params):
 
         u = common.parseDOM(serial, 'a', ret='href')[0].strip('/')
 
-        id = ids[i][-4:-20:-1][::-1]
-        id = id if id else '0'
+        id = int(ids[i]) / 1000
 
         img = IMG_URL_PATTERN % (id, u)
         fan = ART_URL_PATTERN % (id, u)
@@ -207,8 +205,7 @@ def show_seasons(params):
 
     params['i'] = params.get('i', common.parseDOM(html, 'div', attrs={'class':'serial-item-rating clickonce'}, ret='data-id')[0])
 
-    id = params['i'][-4:-20:-1][::-1]
-    id = id if id else '0'
+    id = int(params['i']) / 1000
 
     img = IMG_URL_PATTERN % (id, params['u'])
     fan = ART_URL_PATTERN % (id, params['u'])
@@ -248,7 +245,6 @@ def show_seasons(params):
 
 
 def show_sounds(url, params):
-
     html = get_html(url)
 
     playable = '.html' in url
@@ -265,7 +261,6 @@ def show_sounds(url, params):
 
 
 def show_season(params):
-
     page = int(params.get('page', 1))
 
     url = '%s/%s/page/%s/' % (BASE_URL, params['u'], page) if page > 1 else '%s/%s/' % (BASE_URL, params['u'])
@@ -309,7 +304,6 @@ def show_season(params):
 
 
 def play_episode(params):
-
     url = BASE_URL + params['u']
 
     o = 0 if sound_mode == 0 else int(params.get('o', -1))
@@ -338,6 +332,8 @@ def play_episode(params):
         iframe = data[o]['player']
 
         if 'moonwalk' in iframe:
+            import moonwalk as moon
+
             if 'e' in params.keys():
                 iframe = re.search(r"(.*)\?", iframe)
                 if iframe:
@@ -473,13 +469,18 @@ def get_html(url, params={}, noerror=True, useProxy=False, referer=None):
 
         if useProxy:
             url = url.replace(BASE_URL, 'http://fanserial.net')
-            url = '%s?%s' % ('https://us4.free-proxy.com/browse.php', urllib.urlencode({'u':url, 'b':4}))
+#            url = '%s?%s' % ('https://us4.free-proxy.com/browse.php', urllib.urlencode({'u':url, 'b':4}))
+            headers['Referer'] = 'http://littleknownlies.com/index.php?q=' + urllib.quote_plus(referer if referer else url)
+            url = '%s?%s' % ('http://littleknownlies.com/index.php', urllib.urlencode({'q':url, 'hl':20}))
 
         request = urllib2.Request(url, headers=headers)
         conn = urllib2.urlopen(request)
 
         html = conn.read()
         conn.close()
+
+        if useProxy:
+            html = re.sub(r'"http://littleknownlies\.com/index\.php\?q=(.*?)"', lambda x:urllib.unquote_plus(x.group(1)), html)
 
     except urllib2.HTTPError, err:
         if not noerror:
