@@ -80,10 +80,9 @@ def get_description(url, id, force=False):
         desc = common.parseDOM(html, 'div', attrs={'class':'body', 'itemprop':'description'})
         if len(desc) > 0:
             plot = common.stripTags(desc[0])
+            db_store(id, plot)
         else:
             plot = ''
-
-        db_store(id, plot)
 
     return plot
 
