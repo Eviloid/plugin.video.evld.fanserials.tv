@@ -25,7 +25,7 @@ icon = xbmc.translatePath(os.path.join(Pdir, 'icon.png'))
 fanart = xbmc.translatePath(os.path.join(Pdir, 'fanart.jpg'))
 db = xbmc.translatePath(os.path.join(Pdir, 'serials.db'))
 
-BASE_URL = 'http://' + addon.getSetting('host')
+BASE_URL = 'https://' + addon.getSetting('host')
 IMG_URL_PATTERN = BASE_URL.strip('/') + '/storage/serials/%s/v2/%s.jpg'
 ART_URL_PATTERN = BASE_URL.strip('/') + '/storage/serials/%s/h2/%s.jpg'
 
@@ -141,7 +141,7 @@ def new_serials(params):
             ids = common.parseDOM(serial, 'a', attrs={'class':'popover-btn'}, ret='data-serial-id')
             u = hrefs[i].strip('/')
             desc = get_description(u, ids[0])
-         
+
             id = int(ids[0]) / 1000
             fan = ART_URL_PATTERN % (id, u)
 
@@ -447,7 +447,7 @@ def fix_sub(surl, prefix='ru_'):
                     fixed.append(line)
             else:
                 temp_name = os.path.join(xbmc.translatePath('special://masterprofile'), prefix + 'fsubs.vtt')
-                temp_file = open(temp_name, "w")
+                temp_file = open(temp_name, 'w')
                 temp_file.write('\n'.join(fixed))
                 temp_file.close()
                 surl = temp_name
@@ -467,7 +467,7 @@ def get_html(url, params={}, noerror=True, useProxy=False, referer=None):
             url = '%s?%s' % (url, urllib.urlencode(params))
 
         if useProxy:
-            url = url.replace(BASE_URL, 'http://fanserial.net')
+            url = url.replace(BASE_URL, 'https://fanserial.net')
 #            url = '%s?%s' % ('https://us4.free-proxy.com/browse.php', urllib.urlencode({'u':url, 'b':4}))
             headers['Referer'] = 'http://littleknownlies.com/index.php?q=' + urllib.quote_plus(referer if referer else url)
             url = '%s?%s' % ('http://littleknownlies.com/index.php', urllib.urlencode({'q':url, 'hl':20}))
@@ -481,7 +481,7 @@ def get_html(url, params={}, noerror=True, useProxy=False, referer=None):
         if useProxy:
             html = re.sub(r'"http://littleknownlies\.com/index\.php\?q=(.*?)"', lambda x:urllib.unquote_plus(x.group(1)), html)
 
-    except urllib2.HTTPError, err:
+    except urllib2.HTTPError as err:
         if not noerror:
             html = err.code
 
@@ -524,8 +524,8 @@ connect = sql.connect(database=db)
 cursor = connect.cursor()
 
 def db_store(n, plot):
-    plot = plot.replace("'","XXCC").replace('"',"XXDD")
-    id = "n" + n
+    plot = plot.replace("'",'XXCC').replace('"','XXDD')
+    id = 'n' + n
     try:
         cursor.execute('CREATE TABLE IF NOT EXISTS {0} (plot VARCHAR(512), i VARCHAR(1));'.format(id))
         connect.commit()
@@ -538,7 +538,7 @@ def db_store(n, plot):
         connect.commit()
 
 def db_restore(n):
-    id = "n" + n
+    id = 'n' + n
     plot = None
     try:
         cursor.execute('SELECT plot FROM {0};'.format(id))
@@ -546,7 +546,7 @@ def db_restore(n):
         data = cursor.fetchall()
 
         if len(data) > 0:
-            plot = data[0][0].replace("XXCC","'").replace("XXDD",'"')
+            plot = data[0][0].replace('XXCC',"'").replace('XXDD','"')
     except:
         pass
 
