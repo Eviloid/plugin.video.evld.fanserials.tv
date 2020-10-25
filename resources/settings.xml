@@ -9,10 +9,4 @@
     <category label="Разное">
         <setting id="UseProxy" label= "Использовать прокси если &quot;Контент недоступен&quot;" type="bool" default="false" visible="true"/>
     </category>
-    <category label="moonwalk.cc">
-        <setting id="key" label="Key" type="text" default="9186a0bae4afec34c323aecb7754b7c848e016188eb8b5be677d54d3e70f9cbd" visible="true"/>
-        <setting id="iv" label="iv" type="text" default="2ea2116c80fae4e90c1e2b2b765fcc45" visible="true"/>
-        <setting type="sep"/>
-        <setting label="Обновить ключи" type="action" action="RunPlugin(plugin://plugin.video.evld.fanserials.tv?mode=updatekeys)"/>
-    </category>
 </settings>

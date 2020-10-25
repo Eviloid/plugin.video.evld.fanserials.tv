@@ -36,7 +36,6 @@ def main_menu():
     add_item('[B]Сериалы[/B]', params={'mode':'abc', 't':'0'}, fanart=fanart, isFolder=True)
     add_item('[B]Аниме[/B]', params={'mode':'abc', 't':'2'}, fanart=fanart, isFolder=True)
     add_item('[B]Мультсериалы[/B]', params={'mode':'abc', 't':'1'}, fanart=fanart, isFolder=True)
-#    add_item('[B]Дорамы[/B]', params={'mode':'abc', 't':'5'}, fanart=fanart, isFolder=True)
     add_item('[B]Документальное[/B]', params={'mode':'abc', 't':'3'}, fanart=fanart, isFolder=True)
     add_item('[B]ТВ-шоу[/B]', params={'mode':'abc', 't':'6'}, fanart=fanart, isFolder=True)
     add_item('[B]Новые сериалы[/B]', params={'mode':'new_serials'}, fanart=fanart, isFolder=True)
@@ -220,20 +219,6 @@ def show_seasons(params):
             u = common.parseDOM(season, 'a', ret='href')[0].strip('/')
 
             add_item(title, params={'mode':'season', 'u':u}, plot=plot, poster=img, fanart=fan, isFolder=True)
-    else:
-        # moonwalk
-        data = re.search(r"window\.playerData = '(\[.*\])';<", html, re.I and re.S)
-        if data:
-            o = 0 if sound_mode == 0 else int(params.get('o', -1))
-            if o == -1:
-                show_sounds(url, params)
-                return
-
-            data = json.loads(data.group(1))
-            seasons = sorted(data[o]['seasons'])
-            for season in seasons:
-                title = 'Сезон ' + str(season)
-                add_item(title, params={'mode':'season', 'u':params['u'], 's':season, 'o':o}, plot=plot, poster=img, fanart=fan, isFolder=True)
 
     if len(seasons) == 0:
         show_season(params)
@@ -287,17 +272,6 @@ def show_season(params):
             params['page'] = page + 1
             add_item('Далее > %d' % params['page'], params=params, fanart=fanart, isFolder=True)
 
-    else:
-        # moonwalk
-        data = re.search(r"window\.playerData = '(\[.*\])';<", html, re.I and re.S)
-        if data:
-            o = int(params.get('o', 0))
-            data = json.loads(data.group(1))
-            episodes = sorted(data[o]['seasons'][params['s']]['episodes'])
-            for episode in episodes:
-                title = 'Серия ' + str(episode)
-                add_item(title, params={'mode':'episode', 'u':'/%s/' % params['u'], 's':params['s'], 'e':episode, 'o':o}, icon=icon, fanart=fanart, isPlayable=True)
-
     xbmcplugin.setContent(handle, 'episodes')
     xbmcplugin.endOfDirectory(handle)
 
@@ -330,30 +304,7 @@ def play_episode(params):
         data = json.loads(data.group(1))
         iframe = data[o]['player']
 
-        if 'moonwalk' in iframe:
-            import moonwalk as moon
-
-            if 'e' in params.keys():
-                iframe = re.search(r"(.*)\?", iframe)
-                if iframe:
-                    src = '%s?season=%s&episode=%s&nocontrols=1' % (iframe.group(1), params['s'], params['e'])
-            else:
-                src = iframe
-
-            key = addon.getSetting('key')
-            iv = addon.getSetting('iv')
-
-            data = moon.get_url(src, url, key, iv)
-            if 'subtitles' in data.keys():
-                if data['subtitles']:
-                    surl = data['subtitles']['master_vtt']
-                    if surl[:2] == '//': surl = src.split("//")[0] + surl
-                    surls.append(surl)
-
-            if 'm3u8' in data.keys():
-                purl = data['m3u8']
-
-        elif 'vio.to' in iframe:
+        if 'vio.to' in iframe:
             html = get_html(iframe)
             s = re.search(r"link:.?'(.*?)'", html)
             if s:
@@ -593,13 +544,5 @@ if mode == 'cleancache':
     from tccleaner import TextureCacheCleaner as tcc
     tcc().remove_like('%fanimg.site%', True)
     tcc().remove_like('%fanserials%', True)
-
-if mode == 'updatekeys':
-    res = common.fetchPage({'link':'https://raw.githubusercontent.com/WendyH/PHP-Scripts/master/moon4crack.ini'})
-    if res['content']:
-        data = {k.strip(): v.strip().strip('"') for i in [l for l in res['content'].splitlines() if l.strip() != ''] for k, v in [i.split('=')]}
-        addon.setSetting('key', data['key'])
-        addon.setSetting('iv', data['iv'])
-        xbmcgui.Dialog().notification(PLUGIN_NAME, 'Ключи обновлены', icon, 2000, False)
 
 connect.close()
