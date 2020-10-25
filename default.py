@@ -31,6 +31,8 @@ ART_URL_PATTERN = BASE_URL.strip('/') + '/storage/serials/%s/h2/%s.jpg'
 
 
 sound_mode = int(addon.getSetting('sound'))
+auto_update_description = addon.getSetting('AutoUpdate') == 'true'
+
 
 def main_menu():
     add_item('[B]Сериалы[/B]', params={'mode':'abc', 't':'0'}, fanart=fanart, isFolder=True)
@@ -490,7 +492,7 @@ def db_store(n, plot):
 
 def db_restore(n):
     id = 'n' + n
-    plot = None
+    plot = None if auto_update_description else ''
     try:
         cursor.execute('SELECT plot FROM {0};'.format(id))
         connect.commit()

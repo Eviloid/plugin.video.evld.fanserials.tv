@@ -8,5 +8,6 @@
     </category>
     <category label="Разное">
         <setting id="UseProxy" label= "Использовать прокси если &quot;Контент недоступен&quot;" type="bool" default="false" visible="true"/>
+        <setting id="AutoUpdate" label= "Автоматически обновлять описания" type="bool" default="false" visible="true"/>
     </category>
 </settings>
