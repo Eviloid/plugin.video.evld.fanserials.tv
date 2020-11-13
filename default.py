@@ -182,7 +182,7 @@ def show_serials(params):
     for i, serial in enumerate(serials):
         title = common.parseDOM(serial, 'a')[0]
 
-        u = common.parseDOM(serial, 'a', ret='href')[0].strip('/')
+        u = common.parseDOM(serial, 'a', ret='href')[0].strip('/').encode('utf-8')
 
         id = int(ids[i]) / 1000
 
