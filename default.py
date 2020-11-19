@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 # Eviloid, 22.08.2019
 
-import os, urllib, sys, urllib2, re, cookielib, json
-import urlparse as parse
+import os, sys
+import urllib, urllib2, urlparse, cookielib
+import re, json
 
 import xbmc, xbmcgui, xbmcplugin, xbmcaddon
 import CommonFunctions
@@ -42,7 +43,6 @@ def main_menu():
     add_item('[B]ТВ-шоу[/B]', params={'mode':'abc', 't':'6'}, fanart=fanart, isFolder=True)
     add_item('[B]Новые сериалы[/B]', params={'mode':'new_serials'}, fanart=fanart, isFolder=True)
 
-    # новинки
     html = get_html(BASE_URL + '/new/')
 
     container = common.parseDOM(html, 'div', attrs={'id':'episode_list'})
@@ -221,6 +221,22 @@ def show_seasons(params):
             u = common.parseDOM(season, 'a', ret='href')[0].strip('/')
 
             add_item(title, params={'mode':'season', 'u':u}, plot=plot, poster=img, fanart=fan, isFolder=True)
+    else:
+        # alloha
+        iframe = common.parseDOM(html, 'iframe', attrs={'id':'iframe-player'}, ret='src')
+        iframe = iframe[0] if iframe else ''
+        if 'alloha' in iframe:
+            from alloha import AllohaBalancer
+            alloha = AllohaBalancer(iframe)
+
+            try:
+                seasons = alloha.get_seasons()
+            except urllib2.HTTPError:
+                xbmcgui.Dialog().notification(PLUGIN_NAME, 'Видео не найдено', icon, 2000, True)
+                return
+            else:
+                for season in seasons:
+                    add_item(season['title'], params={'mode':'season', 'u':params['u'], 's':season['id']}, plot=plot, poster=img, fanart=fan, isFolder=True)
 
     if len(seasons) == 0:
         show_season(params)
@@ -235,13 +251,27 @@ def show_sounds(url, params):
 
     playable = '.html' in url
 
-    data = re.search(r"window\.playerData = '(\[.*\])';<", html, re.I and re.S)
-    if data:
-        data = json.loads(data.group(1))
-        for i, player in enumerate(data):
+    translations = re.search(r"window\.playerData = '(\[.*\])';<", html, re.I and re.S)
+    if translations:
+        translations = json.loads(translations.group(1))
+        for i, player in enumerate(translations):
             params['o'] = i
             add_item(player['name'], params, icon=icon, fanart=fanart, isPlayable=playable, isFolder= not playable)
+    else:
+        # alloha
+        iframe = common.parseDOM(html, 'iframe', attrs={'id':'iframe-player'}, ret='src')
+        iframe = iframe[0] if iframe else ''
+        if 'alloha' in iframe:
+            from alloha import AllohaBalancer
+            alloha = AllohaBalancer(iframe)
+            alloha.season = params.get('s')
+            alloha.episode = params.get('e')
+            translations = alloha.get_translations()
 
+            for translation in translations:
+                params['o'] = translation['id']
+                add_item(translation['title'], params, icon=icon, fanart=fanart, isPlayable=True, isFolder=False)
+    if translations:
         xbmcplugin.setContent(handle, 'videos')
         xbmcplugin.endOfDirectory(handle)
 
@@ -273,6 +303,18 @@ def show_season(params):
         if len(p) > 0:
             params['page'] = page + 1
             add_item('Далее > %d' % params['page'], params=params, fanart=fanart, isFolder=True)
+    else:
+        # alloha
+        iframe = common.parseDOM(html, 'iframe', attrs={'id':'iframe-player'}, ret='src')
+        iframe = iframe[0] if iframe else ''
+        if 'alloha' in iframe:
+            from alloha import AllohaBalancer
+            alloha = AllohaBalancer(iframe)
+            alloha.season = params.get('s')
+            episodes = alloha.get_episodes()
+
+            for episode in episodes:
+                add_item(episode['title'], params={'mode':'episode', 'u':'/%s' % params['u'], 's':alloha.season, 'e':episode['id']}, icon=icon, fanart=fanart, isFolder=sound_mode==1, isPlayable=sound_mode==0)
 
     xbmcplugin.setContent(handle, 'episodes')
     xbmcplugin.endOfDirectory(handle)
@@ -295,11 +337,23 @@ def play_episode(params):
             html = get_html(url, useProxy=True)
         else:
             content = common.parseDOM(block, 'div', attrs={'class':'heading'})[0]
-            xbmcgui.Dialog().notification(PLUGIN_NAME, content, icon, 2000, True)
+            xbmcgui.Dialog().notification(PLUGIN_NAME, content, icon, 500, True)
             return
 
     purl = ''
     surls = []
+
+    # alloha
+    iframe = common.parseDOM(html, 'iframe', attrs={'id':'iframe-player'}, ret='src')
+    iframe = iframe[0] if iframe else ''
+    if 'alloha' in iframe:
+        from alloha import AllohaBalancer
+        alloha = AllohaBalancer(iframe)
+        alloha.season = params.get('s')
+        alloha.episode = params.get('e')
+        alloha.translation = params.get('o')
+
+        purl = alloha.get_video()
 
     data = re.search(r"window\.playerData = '(\[.*\])';<", html, re.I and re.S)
     if data:
@@ -341,15 +395,22 @@ def play_episode(params):
             html = get_html(iframe)
             s = re.search(r'"hls":"(.*?\.m3u8)', html)
             if not s:
-                html = get_html(iframe, useProxy=True, referer=url)
-                s = re.search(r'"hls":"(.*?\.m3u8)', html)
+                block = re.search('<title>forbidden', html)
+                if block:
+                    if addon.getSetting('UseProxy') == 'true':
+                        html = get_html(iframe, useProxy=True, referer=url)
+                        s = re.search(r'"hls":"(.*?\.m3u8)', html)
+                    else:
+                        content = common.parseDOM(html, 'div')[0]
+                        xbmcgui.Dialog().notification(PLUGIN_NAME, content, icon, 500, True)
+                        return
 
             if s:
                 purl = s.group(1).replace(r'\/', '/').replace(r'\r', '').replace(r'\n', '')
 
             s = re.search(r'data-ru_subtitle="(.*?)"', html)
 
-            iframe_parts = parse.urlsplit(iframe)
+            iframe_parts = urlparse.urlsplit(iframe)
 
             if s:
                 surl = s.group(1)
@@ -366,15 +427,15 @@ def play_episode(params):
 
                 surls.append(fix_sub(surl, 'en_'))
 
-        if purl:
-            item = xbmcgui.ListItem(path=purl)
-            surls = [i for i in surls if i]
-            if surls:
-                item.setSubtitles(surls)
-            else:
-                item.setProperty('inputstreamaddon', 'inputstream.adaptive')
-                item.setProperty('inputstream.adaptive.manifest_type', 'hls')
-            xbmcplugin.setResolvedUrl(handle, True, item)
+    if purl:
+        item = xbmcgui.ListItem(path=purl)
+        surls = [i for i in surls if i]
+        if surls:
+            item.setSubtitles(surls)
+        else:
+            item.setProperty('inputstreamaddon', 'inputstream.adaptive')
+            item.setProperty('inputstream.adaptive.manifest_type', 'hls')
+        xbmcplugin.setResolvedUrl(handle, True, item)
 
 
 def fix_sub(surl, prefix='ru_'):
@@ -421,7 +482,6 @@ def get_html(url, params={}, noerror=True, useProxy=False, referer=None):
 
         if useProxy:
             url = url.replace(BASE_URL, 'https://fanserial.net')
-#            url = '%s?%s' % ('https://us4.free-proxy.com/browse.php', urllib.urlencode({'u':url, 'b':4}))
             headers['Referer'] = 'http://littleknownlies.com/index.php?q=' + urllib.quote_plus(referer if referer else url)
             url = '%s?%s' % ('http://littleknownlies.com/index.php', urllib.urlencode({'q':url, 'hl':20}))
 

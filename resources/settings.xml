@@ -1,13 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <settings>
-    <category label="Основные">
-        <setting id="host" label="Хост" type="text" default="fanserial.net" visible="true"/>
-        <setting id="sound" label="Озвучка" type="enum" default="0" values="По-умолчанию|Выбор" visible="true"/>
-        <setting type="sep"/>
-        <setting label="Очистить кэш картинок" type="action" action="RunPlugin(plugin://plugin.video.evld.fanserials.tv?mode=cleancache)" option="close"/>
-    </category>
-    <category label="Разное">
-        <setting id="UseProxy" label= "Использовать прокси если &quot;Контент недоступен&quot;" type="bool" default="false" visible="true"/>
-        <setting id="AutoUpdate" label= "Автоматически обновлять описания" type="bool" default="false" visible="true"/>
-    </category>
+  <category label="Основные">
+    <setting id="host" label="Хост" type="text" default="fanserial.net" visible="true"/>
+    <setting id="sound" label="Озвучка" type="enum" default="0" values="По-умолчанию|Выбор" visible="true"/>
+    <setting type="sep"/>
+    <setting label="Очистить кэш картинок" type="action" action="RunPlugin(plugin://plugin.video.evld.fanserials.tv?mode=cleancache)" option="close"/>
+  </category>
+  <category label="Разное">
+    <setting id="UseProxy" label= "Использовать прокси если &quot;Контент недоступен&quot;" type="bool" default="false" visible="true"/>
+    <setting id="AutoUpdate" label= "Автоматически обновлять описания" type="bool" default="false" visible="true"/>
+  </category>
 </settings>
