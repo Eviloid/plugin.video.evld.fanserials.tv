@@ -360,7 +360,12 @@ def play_episode(params):
         data = json.loads(data.group(1))
         iframe = data[o]['player']
 
-        if 'vio.to' in iframe:
+        if 'alloha' in iframe:
+            from alloha import AllohaBalancer
+            alloha = AllohaBalancer(iframe)
+            purl = alloha.get_video()
+
+        elif 'vio.to' in iframe:
             html = get_html(iframe)
             s = re.search(r"link:.?'(.*?)'", html)
             if s:
