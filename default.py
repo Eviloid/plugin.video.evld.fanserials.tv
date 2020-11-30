@@ -486,9 +486,10 @@ def get_html(url, params={}, noerror=True, useProxy=False, referer=None):
             url = '%s?%s' % (url, urllib.urlencode(params))
 
         if useProxy:
+            phproxy = 'http://adilam.homeip.net/proxy' # HK
             url = url.replace(BASE_URL, 'https://fanserial.net')
-            headers['Referer'] = 'http://littleknownlies.com/index.php?q=' + urllib.quote_plus(referer if referer else url)
-            url = '%s?%s' % ('http://littleknownlies.com/index.php', urllib.urlencode({'q':url, 'hl':20}))
+            headers['Referer'] = '{0}/index.php?q={1}'.format(phproxy, urllib.quote_plus(referer if referer else url))
+            url = '%s?%s' % ('{0}/index.php'.format(phproxy), urllib.urlencode({'q':url, 'hl':20}))
 
         request = urllib2.Request(url, headers=headers)
         conn = urllib2.urlopen(request)
@@ -497,7 +498,7 @@ def get_html(url, params={}, noerror=True, useProxy=False, referer=None):
         conn.close()
 
         if useProxy:
-            html = re.sub(r'"http://littleknownlies\.com/index\.php\?q=(.*?)"', lambda x:urllib.unquote_plus(x.group(1)), html)
+            html = re.sub(r'"{0}/index\.php\?q=(.*?)"'.format(phproxy.replace('.', r'\.')), lambda x:urllib.unquote_plus(x.group(1)), html)
 
     except urllib2.HTTPError as err:
         if not noerror:
