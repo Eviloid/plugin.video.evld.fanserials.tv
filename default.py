@@ -246,31 +246,29 @@ def show_seasons(params):
     xbmcplugin.endOfDirectory(handle)
 
 
-def show_sounds(url, params):
-    html = get_html(url)
+def show_sounds(html, params):
 
-    playable = '.html' in url
+    # alloha
+    iframe = common.parseDOM(html, 'iframe', attrs={'id':'iframe-player'}, ret='src')
+    iframe = iframe[0] if iframe else ''
+    if 'alloha' in iframe:
+        from alloha import AllohaBalancer
+        alloha = AllohaBalancer(iframe)
+        alloha.season = params.get('s')
+        alloha.episode = params.get('e')
+        translations = alloha.get_translations()
 
-    translations = re.search(r"window\.playerData = '(\[.*\])';<", html, re.I and re.S)
-    if translations:
-        translations = json.loads(translations.group(1))
-        for i, player in enumerate(translations):
-            params['o'] = i
-            add_item(player['name'], params, icon=icon, fanart=fanart, isPlayable=playable, isFolder= not playable)
+        for translation in translations:
+            params['o'] = translation['id']
+            add_item(translation['title'], params, icon=icon, fanart=fanart, isPlayable=True, isFolder=False)
     else:
-        # alloha
-        iframe = common.parseDOM(html, 'iframe', attrs={'id':'iframe-player'}, ret='src')
-        iframe = iframe[0] if iframe else ''
-        if 'alloha' in iframe:
-            from alloha import AllohaBalancer
-            alloha = AllohaBalancer(iframe)
-            alloha.season = params.get('s')
-            alloha.episode = params.get('e')
-            translations = alloha.get_translations()
+        translations = re.search(r"window\.playerData = '(\[.*\])';<", html, re.I and re.S)
+        if translations:
+            translations = json.loads(translations.group(1))
+            for i, player in enumerate(translations):
+                params['o'] = i
+                add_item(player['name'], params, icon=icon, fanart=fanart, isPlayable=True, isFolder=False)
 
-            for translation in translations:
-                params['o'] = translation['id']
-                add_item(translation['title'], params, icon=icon, fanart=fanart, isPlayable=True, isFolder=False)
     if translations:
         xbmcplugin.setContent(handle, 'videos')
         xbmcplugin.endOfDirectory(handle)
@@ -323,12 +321,6 @@ def show_season(params):
 def play_episode(params):
     url = BASE_URL + params['u']
 
-    o = 0 if sound_mode == 0 else int(params.get('o', -1))
-
-    if o == -1:
-        show_sounds(url, params)
-        return
-
     html = get_html(url)
 
     block = common.parseDOM(html, 'div', attrs={'class':'limited-block-content'})
@@ -339,6 +331,12 @@ def play_episode(params):
             content = common.parseDOM(block, 'div', attrs={'class':'heading'})[0]
             xbmcgui.Dialog().notification(PLUGIN_NAME, content, icon, 500, True)
             return
+
+    o = 0 if sound_mode == 0 else int(params.get('o', -1))
+
+    if o == -1:
+        show_sounds(html, params)
+        return
 
     purl = ''
     surls = []
@@ -355,10 +353,13 @@ def play_episode(params):
 
         purl = alloha.get_video()
 
-    data = re.search(r"window\.playerData = '(\[.*\])';<", html, re.I and re.S)
-    if data:
-        data = json.loads(data.group(1))
-        iframe = data[o]['player']
+    if not purl:
+        data = re.search(r"window\.playerData = '(\[.*\])';<", html, re.I and re.S)
+        if data:
+            data = json.loads(data.group(1))
+            iframe = data[o]['player']
+        else:
+            iframe = ''
 
         if 'alloha' in iframe:
             from alloha import AllohaBalancer
